@@ -284,16 +284,22 @@ export type Database = {
       }
       settings: {
         Row: {
+          business_owed_as_of: string | null
+          business_owed_before: number | null
           household_id: string
           offset_as_of: string | null
           offset_balance: number | null
         }
         Insert: {
+          business_owed_as_of?: string | null
+          business_owed_before?: number | null
           household_id: string
           offset_as_of?: string | null
           offset_balance?: number | null
         }
         Update: {
+          business_owed_as_of?: string | null
+          business_owed_before?: number | null
           household_id?: string
           offset_as_of?: string | null
           offset_balance?: number | null

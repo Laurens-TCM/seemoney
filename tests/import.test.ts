@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { applyOverrides, classifyRows } from '../src/lib/classify';
 import { linesToCheck } from '../src/lib/checks';
 import { parseFrolloCsv } from '../src/lib/csv';
-import { clearOverride, countLines, importClassified, loadImports, loadLines, loadOverrides, saveOverride } from '../src/lib/store';
+import { clearOverride, countLines, importClassified, loadBusinessOwed, loadImports, loadLines, loadOverrides, saveBusinessOwed, saveOverride } from '../src/lib/store';
 import { missingRanges, summarise } from '../src/lib/summary';
 import { classifyFile, referenceShape } from './helpers';
 import { liveFixture, liveReady, type Client } from './live';
@@ -73,6 +73,15 @@ describe.skipIf(!liveReady)('importing an export', () => {
     await clearOverride(db, home, '1101');
     const after = applyOverrides(await loadLines(db, home), await loadOverrides(db, home));
     expect(after.find(l => l.txId === '1101')).toMatchObject({ category: 'Uncategorised', review: expect.stringContaining('Check category') });
+  }, 60_000);
+
+  it('saves what the business owed before, without touching the offset balance', async () => {
+    expect(await loadBusinessOwed(db, home)).toBeNull();
+    await db.from('settings').upsert({ household_id: home, offset_balance: 123456.78, offset_as_of: '2026-03-01' });
+    await saveBusinessOwed(db, home, { amount: 1_000_000, asOf: '2026-01-02' });
+    expect(await loadBusinessOwed(db, home)).toEqual({ amount: 1_000_000, asOf: '2026-01-02' });
+    const s = await db.from('settings').select('offset_balance').eq('household_id', home).single();
+    expect(s.data?.offset_balance).toBe(123456.78);
   }, 60_000);
 
   it('shows the missing range when a later export leaves a gap', async () => {

@@ -1,7 +1,7 @@
 // Query hooks for household data. Keys include the household id so a sign-out never shows stale data.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { loadHousehold, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
+import { loadBusinessOwed, loadHousehold, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -40,3 +40,6 @@ export function useUserSettings(householdId: string | undefined) {
   const settings = chosen ?? q.data ?? { hideTrips: null, windowMonths: 12 as const };
   return { settings, save: (s: UserSettings) => { setChosen(s); save.mutate(s); }, saveError: save.error };
 }
+
+export const useBusinessOwed = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['business-owed', householdId], queryFn: () => loadBusinessOwed(supabase, householdId!), enabled: !!householdId });

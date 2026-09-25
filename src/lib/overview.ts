@@ -159,3 +159,21 @@ function lastDay(month: string): string {
   const [y, m] = month.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 }
+
+export interface BusinessBalance { owedBefore: number; asOf: string; lent: number; repaid: number; stillOwed: number }
+
+/**
+ * What the business still owes: the amount owed before `asOf`, plus everything lent since, minus
+ * everything repaid since. Uses all lines from `asOf`, not the averaging window. Null until the
+ * starting figure has been entered.
+ */
+export function businessBalance(lines: Line[], opening: { amount: number; asOf: string } | null): BusinessBalance | null {
+  if (!opening) return null;
+  let lent = 0, repaid = 0;
+  for (const l of lines) {
+    if (l.date < opening.asOf) continue;
+    if (l.kind === 'business_loan') lent -= l.amount;
+    if (l.kind === 'business_loan_repaid') repaid += l.amount;
+  }
+  return { owedBefore: opening.amount, asOf: opening.asOf, lent, repaid, stillOwed: opening.amount + lent - repaid };
+}

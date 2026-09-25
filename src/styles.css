@@ -166,3 +166,7 @@ details summary { cursor: pointer; font-weight: 600; }
 .group-row .track span { display: block; height: 100%; background: var(--chart-spend); border-radius: 3px; }
 .group-detail { padding: 0 0 .75rem; }
 .group-detail h3 { font-size: .875rem; margin-top: .5rem; }
+input.amount {
+  font: inherit; padding: .5rem .625rem; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); width: 9rem;
+}

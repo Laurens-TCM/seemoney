@@ -1,12 +1,29 @@
 // Phase 4 acceptance: Overview figures. Real-data checks read data/expected-real.json at test time.
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buildOverview } from '../src/lib/overview';
+import { businessBalance, buildOverview } from '../src/lib/overview';
+import { applyOverrides } from '../src/lib/classify';
 import { DAYS_PER_MONTH } from '../src/lib/summary';
 import { allocateTrips, suggestTrips, tripDatesFor } from '../src/lib/trips';
 import { classifyFile, dollars } from './helpers';
 
 const sumPm = (xs: { perMonth: number }[]) => xs.reduce((a, x) => a + x.perMonth, 0);
+
+describe('what the business still owes', () => {
+  const { lines } = classifyFile('fixtures/sample-frollo.csv');
+  // Lent $10,000 on 5 Mar; tag a $2,950 pay line from 19 Jan as a repayment.
+  const tagged = applyOverrides(lines, [{ txId: '1004', kind: 'business_loan_repaid' }]);
+
+  it('adds lending and takes off repayments since the starting figure', () => {
+    expect(businessBalance(tagged, { amount: 500_000, asOf: '2026-01-02' }))
+      .toEqual({ owedBefore: 500_000, asOf: '2026-01-02', lent: 1_000_000, repaid: 295_000, stillOwed: 1_205_000 });
+  });
+
+  it('ignores movements before the starting date, and waits for a starting figure', () => {
+    expect(businessBalance(tagged, { amount: 0, asOf: '2026-02-01' })).toMatchObject({ repaid: 0, stillOwed: 1_000_000 });
+    expect(businessBalance(tagged, null)).toBeNull();
+  });
+});
 
 describe('overview on the sample', () => {
   const { lines } = classifyFile('fixtures/sample-frollo.csv');

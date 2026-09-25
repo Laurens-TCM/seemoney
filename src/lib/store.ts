@@ -183,3 +183,19 @@ export async function loadTrips(db: Db, householdId: string): Promise<{ trips: S
     overrides: overrides.map(o => ({ tripId: o.trip_id, txId: o.tx_id, included: o.included })),
   };
 }
+
+/** What the business owed before the data starts (shared by the household), in cents. */
+export async function loadBusinessOwed(db: Db, householdId: string): Promise<{ amount: number; asOf: string } | null> {
+  const rows = must(await db.from('settings').select('business_owed_before, business_owed_as_of').eq('household_id', householdId));
+  const r = rows[0];
+  return r?.business_owed_before != null && r.business_owed_as_of ? { amount: toCents(r.business_owed_before), asOf: r.business_owed_as_of } : null;
+}
+
+/** Saves only these two columns, so the offset balance in the same row is untouched. */
+export async function saveBusinessOwed(db: Db, householdId: string, value: { amount: number; asOf: string } | null): Promise<void> {
+  must(await db.from('settings').upsert({
+    household_id: householdId,
+    business_owed_before: value ? toDollars(value.amount) : null,
+    business_owed_as_of: value?.asOf ?? null,
+  }, { onConflict: 'household_id' }));
+}

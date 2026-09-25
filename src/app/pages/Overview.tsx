@@ -1,12 +1,15 @@
 // Overview: the headline, month by month, where the money goes, and what isn't spending.
-import { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
-import { applyOverrides } from '../../lib/classify';
+import { applyOverrides, type Line } from '../../lib/classify';
 import { linesToCheck } from '../../lib/checks';
-import { buildOverview, type GroupRow, type Overview as OverviewData } from '../../lib/overview';
+import { businessBalance, buildOverview, type GroupRow, type Overview as OverviewData } from '../../lib/overview';
+import { saveBusinessOwed } from '../../lib/store';
+import { supabase } from '../../lib/supabase';
 import type { WindowMonths } from '../../lib/summary';
 import { allocateTrips } from '../../lib/trips';
-import { useHousehold, useImports, useLines, useOverrides, useTrips, useUserSettings } from '../data';
+import { useBusinessOwed, useHousehold, useImports, useLines, useOverrides, useTrips, useUserSettings } from '../data';
 import { day, money, plural, range } from '../format';
 import { MonthChart } from '../MonthChart';
 
@@ -80,7 +83,7 @@ export function Overview() {
       </section>
 
       <WhereItGoes o={o} />
-      <NotCounted o={o} />
+      <NotCounted o={o} lines={current!} householdId={hid} dataStart={imports.data!.reduce((d, i) => (i.range.from < d ? i.range.from : d), o.window.to)} />
     </>
   );
 }
@@ -146,7 +149,7 @@ function GroupDetail({ g, tripsIncluded }: { g: GroupRow; tripsIncluded: boolean
   );
 }
 
-function NotCounted({ o }: { o: OverviewData }) {
+function NotCounted({ o, lines, householdId, dataStart }: { o: OverviewData; lines: Line[]; householdId: string; dataStart: string }) {
   const b = o.business;
   return (
     <section className="panel stack" aria-labelledby="not-counted-heading">
@@ -157,11 +160,8 @@ function NotCounted({ o }: { o: OverviewData }) {
         {o.capital.map(c => (
           <li key={c.what}><span>{c.what}<br /><span className="muted small">{c.payments > 1 ? `${c.payments} payments, ${range({ from: c.from, to: c.to })}` : day(c.from)}</span></span><span>{money(c.amount)}</span></li>
         ))}
-        {(b.lent > 0 || b.repaid > 0) && (
-          <li><span>Loan to TCM (LandCruiser)<br /><span className="muted small">Lent {money(b.lent)} · repaid {money(b.repaid)} in this period</span></span>
-            <span>{money(b.lent - b.repaid)}<br /><span className="muted small">net lent</span></span></li>
-        )}
       </ul>
+      <BusinessLoan period={b} lines={lines} householdId={householdId} dataStart={dataStart} />
       {b.lines.length > 0 && (
         <details className="small">
           <summary>TCM loan movements</summary>
@@ -172,5 +172,65 @@ function NotCounted({ o }: { o: OverviewData }) {
         </details>
       )}
     </section>
+  );
+}
+
+function BusinessLoan({ period, lines, householdId, dataStart }: {
+  period: OverviewData['business']; lines: Line[]; householdId: string; dataStart: string;
+}) {
+  const owed = useBusinessOwed(householdId);
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const balance = owed.data ? businessBalance(lines, owed.data) : null;
+  const asOf = owed.data?.asOf ?? dataStart;
+  if (!owed.data && period.lent === 0 && period.repaid === 0) return null;
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    const dollars = Number(value.replace(/[$,s]/g, ''));
+    if (!Number.isFinite(dollars) || dollars < 0) return setError('Enter an amount in dollars, like 10000.');
+    try {
+      await saveBusinessOwed(supabase, householdId, { amount: Math.round(dollars * 100), asOf });
+      await queryClient.invalidateQueries({ queryKey: ['business-owed', householdId] });
+      setEditing(false); setError(null);
+    } catch (err) {
+      setError(`Couldn't save that (${(err as Error).message}).`);
+    }
+  }
+
+  return (
+    <div className="stack">
+      <ul className="list">
+        <li>
+          <span>Loan to TCM (LandCruiser)<br />
+            <span className="muted small">
+              {balance
+                ? <>Owed {money(balance.owedBefore)} before {day(balance.asOf)} · lent {money(balance.lent)} · repaid {money(balance.repaid)} since</>
+                : <>Lent {money(period.lent)} · repaid {money(period.repaid)} in this period</>}
+            </span>
+          </span>
+          <span>{balance ? money(balance.stillOwed) : money(period.lent - period.repaid)}<br />
+            <span className="muted small">{balance ? 'still owed' : 'net lent'}</span></span>
+        </li>
+      </ul>
+      {editing ? (
+        <form className="actions" onSubmit={submit}>
+          <label htmlFor="owed-before" className="small" style={{ width: '100%' }}>What TCM owed you before {day(asOf)}</label>
+          <input id="owed-before" inputMode="decimal" className="amount" placeholder="10000" value={value} onChange={e => setValue(e.target.value)} />
+          <button type="submit" className="primary">Save</button>
+          <button type="button" onClick={() => { setEditing(false); setError(null); }}>Cancel</button>
+          {error && <p className="error small" role="alert" style={{ width: '100%', margin: 0 }}>{error}</p>}
+        </form>
+      ) : (
+        <p className="small" style={{ margin: 0 }}>
+          {!balance && <span className="muted">Add what TCM owed before {day(asOf)} to see what's still owed. </span>}
+          <button type="button" className="link" onClick={() => { setValue(owed.data ? String(owed.data.amount / 100) : ''); setEditing(true); }}>
+            {balance ? 'Change the starting amount' : 'Add it'}
+          </button>
+        </p>
+      )}
+    </div>
   );
 }
