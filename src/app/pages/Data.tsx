@@ -7,6 +7,7 @@ import { importClassified, type ImportOutcome, type ImportRecord } from '../../l
 import { businessRepaymentChecks, missingRanges, summarise, windowFor, type Summary } from '../../lib/summary';
 import { supabase } from '../../lib/supabase';
 import { useHousehold, useImports, useLines } from '../data';
+import { Checks } from './Checks';
 import { day, money, number, plural, range } from '../format';
 
 type Preview = { fileName: string; result: ClassifyResult; summary: Summary; checks: Line[] };
@@ -66,6 +67,7 @@ export function Data() {
           onCancel={() => setPreview(null)} onDone={o => { setPreview(null); setDone(o); }} />
       )}
 
+      <Checks householdId={hid} />
       <History imports={imports.data} lines={lines.data} members={household!.members} loading={imports.isLoading || lines.isLoading} />
       <Fixes />
     </>
@@ -101,7 +103,7 @@ function PreviewPanel({ preview, householdId, existing, onCancel, onDone }: {
     setError(null); setProgress(0);
     try {
       const outcome = await importClassified(supabase, householdId, fileName, result, (n, total) => setProgress(n / total));
-      await Promise.all(['lines', 'imports'].map(k => queryClient.invalidateQueries({ queryKey: [k, householdId] })));
+      await Promise.all(['lines', 'imports', 'overrides'].map(k => queryClient.invalidateQueries({ queryKey: [k, householdId] })));
       onDone(outcome);
     } catch (e) {
       setProgress(null);

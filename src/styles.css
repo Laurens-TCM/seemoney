@@ -112,3 +112,9 @@ button.link { background: none; border: 0; padding: 0; color: inherit; text-deco
 .progress { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; }
 .progress > span { display: block; height: 100%; background: var(--income); transition: width .2s; }
 .file-pick input { font: inherit; }
+.list li.check { display: block; }
+.check-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
+select {
+  font: inherit; padding: .5rem .625rem; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--ink); max-width: 100%;
+}

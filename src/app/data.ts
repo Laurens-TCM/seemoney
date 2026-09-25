@@ -1,6 +1,6 @@
 // Query hooks for household data. Keys include the household id so a sign-out never shows stale data.
 import { useQuery } from '@tanstack/react-query';
-import { loadHousehold, loadImports, loadLines } from '../lib/store';
+import { loadHousehold, loadImports, loadLines, loadOverrides } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -17,3 +17,6 @@ export const useImports = (householdId: string | undefined) =>
 
 export const useLines = (householdId: string | undefined) =>
   useQuery({ queryKey: ['lines', householdId], queryFn: () => loadLines(supabase, householdId!), enabled: !!householdId });
+
+export const useOverrides = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['overrides', householdId], queryFn: () => loadOverrides(supabase, householdId!), enabled: !!householdId });
