@@ -199,3 +199,67 @@ export async function saveBusinessOwed(db: Db, householdId: string, value: { amo
     business_owed_as_of: value?.asOf ?? null,
   }, { onConflict: 'household_id' }));
 }
+
+export interface TripInput { name: string; start: string; end: string; kind: StoredTrip['kind']; place: Trip['place']; rechargeToBusiness?: boolean }
+
+export async function createTrip(db: Db, householdId: string, t: TripInput): Promise<string> {
+  const { data: user } = await db.auth.getUser();
+  const row = must<{ id: string }>(await db.from('trips').insert({
+    household_id: householdId, name: t.name, start_date: t.start, end_date: t.end, kind: t.kind, place: t.place,
+    recharge_to_business: t.rechargeToBusiness ?? false, created_by: user.user?.id ?? null,
+  }).select('id').single());
+  return row.id;
+}
+
+export async function updateTrip(db: Db, householdId: string, id: string, t: TripInput): Promise<void> {
+  must(await db.from('trips').update({
+    name: t.name, start_date: t.start, end_date: t.end, kind: t.kind, place: t.place,
+    recharge_to_business: t.kind === 'work' && (t.rechargeToBusiness ?? false),
+  }).eq('household_id', householdId).eq('id', id));
+}
+
+/** Deleting a trip also removes its ticks and unticks (on delete cascade). */
+export async function deleteTrip(db: Db, householdId: string, id: string): Promise<void> {
+  must(await db.from('trips').delete().eq('household_id', householdId).eq('id', id));
+}
+
+/** Tick (true) or untick (false) a line on a trip; null goes back to the automatic choice. */
+export async function setTripTick(db: Db, householdId: string, tripId: string, txId: string, included: boolean | null): Promise<void> {
+  if (included === null) {
+    must(await db.from('trip_overrides').delete().eq('household_id', householdId).eq('trip_id', tripId).eq('tx_id', txId));
+  } else {
+    must(await db.from('trip_overrides').upsert({ household_id: householdId, trip_id: tripId, tx_id: txId, included }, { onConflict: 'trip_id,tx_id' }));
+  }
+}
+
+export async function loadDismissed(db: Db, householdId: string): Promise<DateRange[]> {
+  const rows = must(await db.from('dismissed_suggestions').select('from_date, to_date').eq('household_id', householdId));
+  return rows.map(r => ({ from: r.from_date, to: r.to_date }));
+}
+
+export async function dismissSuggestion(db: Db, householdId: string, r: DateRange): Promise<void> {
+  must(await db.from('dismissed_suggestions').insert({ household_id: householdId, from_date: r.from, to_date: r.to }));
+}
+
+/** Undo "Not a trip": forget every dismissed range that overlaps this one. */
+export async function undismiss(db: Db, householdId: string, r: DateRange): Promise<void> {
+  must(await db.from('dismissed_suggestions').delete().eq('household_id', householdId).lte('from_date', r.to).gte('to_date', r.from));
+}
+
+export interface Goal { id: string; name: string; amount: number | null; targetMonth: string | null; saved: number; sort: number }
+
+export async function loadGoals(db: Db, householdId: string): Promise<Goal[]> {
+  const rows = must(await db.from('goals').select('*').eq('household_id', householdId).order('sort').order('id'));
+  return rows.map(g => ({
+    id: g.id, name: g.name, amount: g.amount == null ? null : toCents(g.amount),
+    targetMonth: g.target_month ? g.target_month.slice(0, 7) : null, saved: toCents(g.saved ?? 0), sort: g.sort ?? 0,
+  }));
+}
+
+export async function createGoal(db: Db, householdId: string, g: Omit<Goal, 'id'>): Promise<string> {
+  const row = must<{ id: string }>(await db.from('goals').insert({
+    household_id: householdId, name: g.name, amount: g.amount == null ? null : toDollars(g.amount),
+    target_month: g.targetMonth ? `${g.targetMonth}-01` : null, saved: toDollars(g.saved), sort: g.sort,
+  }).select('id').single());
+  return row.id;
+}
