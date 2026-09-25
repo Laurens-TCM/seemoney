@@ -121,7 +121,8 @@ digit runs and extra spaces removed, cut to 34 characters, title case.
 
 ## Averaging window
 All "per month" figures use a **window**: the last 365 days ending on the newest line's date
-(the Overview also offers 3 and 6 months). Per month = window total ÷ (covered days ÷ 30.4375).
+(the Overview also offers 3 and 6 months: N months = round(N × 30.4375) days, so 183 and 91).
+Per month = window total ÷ (covered days ÷ 30.4375).
 *Covered days* = days in the window that fall inside at least one import's date range (union of
 `imports.from_date..to_date`). If covered days are fewer than the window's days, show
 "Missing data: <ranges>" on the Overview and Data screens.
