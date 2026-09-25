@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { supabase } from '../lib/supabase';
-import { useHousehold } from './data';
+import { useHousehold, useLiveUpdates } from './data';
 
 const TABS = [
   { to: '/', label: 'Overview' },
@@ -13,6 +13,7 @@ const TABS = [
 
 export function Layout() {
   const { household, me, isLoading, error } = useHousehold();
+  useLiveUpdates(household?.id);
 
   return (
     <div className="app">

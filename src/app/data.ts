@@ -1,7 +1,8 @@
 // Query hooks for household data. Keys include the household id so a sign-out never shows stale data.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { loadBusinessOwed, loadHousehold, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
+import { useEffect, useState } from 'react';
+import { LIVE_TABLES, subscribeHousehold } from '../lib/realtime';
+import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -43,3 +44,20 @@ export function useUserSettings(householdId: string | undefined) {
 
 export const useBusinessOwed = (householdId: string | undefined) =>
   useQuery({ queryKey: ['business-owed', householdId], queryFn: () => loadBusinessOwed(supabase, householdId!), enabled: !!householdId });
+
+export const useDismissed = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['dismissed', householdId], queryFn: () => loadDismissed(supabase, householdId!), enabled: !!householdId });
+
+export const useGoals = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['goals', householdId], queryFn: () => loadGoals(supabase, householdId!), enabled: !!householdId });
+
+/** Keeps both phones in step: refetches whatever the other person just changed. */
+export function useLiveUpdates(householdId: string | undefined) {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!householdId) return;
+    return subscribeHousehold(supabase, householdId, table => {
+      for (const key of LIVE_TABLES[table] ?? []) void queryClient.invalidateQueries({ queryKey: [key, householdId] });
+    });
+  }, [householdId, queryClient]);
+}
