@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { LIVE_TABLES, subscribeHousehold } from '../lib/realtime';
-import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
+import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadOffset, loadTargets, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -61,3 +61,9 @@ export function useLiveUpdates(householdId: string | undefined) {
     });
   }, [householdId, queryClient]);
 }
+
+export const useTargets = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['targets', householdId], queryFn: () => loadTargets(supabase, householdId!), enabled: !!householdId });
+
+export const useOffset = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['settings', householdId], queryFn: () => loadOffset(supabase, householdId!), enabled: !!householdId });

@@ -263,3 +263,53 @@ export async function createGoal(db: Db, householdId: string, g: Omit<Goal, 'id'
   }).select('id').single());
   return row.id;
 }
+
+export async function updateGoal(db: Db, householdId: string, g: Goal): Promise<void> {
+  must(await db.from('goals').update({
+    name: g.name, amount: g.amount == null ? null : toDollars(g.amount),
+    target_month: g.targetMonth ? `${g.targetMonth}-01` : null, saved: toDollars(g.saved), sort: g.sort,
+  }).eq('household_id', householdId).eq('id', g.id));
+}
+
+export async function deleteGoal(db: Db, householdId: string, id: string): Promise<void> {
+  must(await db.from('goals').delete().eq('household_id', householdId).eq('id', id));
+}
+
+export interface Targets { amounts: Record<string, number | null>; trim: Record<string, boolean | null> }
+
+export async function loadTargets(db: Db, householdId: string): Promise<Targets> {
+  const rows = must(await db.from('targets').select('grp, monthly_target, trimmable').eq('household_id', householdId));
+  const out: Targets = { amounts: {}, trim: {} };
+  for (const r of rows) {
+    out.amounts[r.grp!] = r.monthly_target == null ? null : toCents(r.monthly_target);
+    out.trim[r.grp!] = r.trimmable;
+  }
+  return out;
+}
+
+/** Saves targets for the given groups (null amount = use the average; null trim = use the default). */
+export async function saveTargets(db: Db, householdId: string, rows: { group: string; amount: number | null; trim: boolean | null }[]): Promise<void> {
+  if (!rows.length) return;
+  must(await db.from('targets').upsert(rows.map(r => ({
+    household_id: householdId, grp: r.group, monthly_target: r.amount == null ? null : toDollars(r.amount), trimmable: r.trim,
+  })), { onConflict: 'household_id,grp' }));
+}
+
+export async function resetTargets(db: Db, householdId: string): Promise<void> {
+  must(await db.from('targets').update({ monthly_target: null }).eq('household_id', householdId));
+}
+
+export interface Offset { balance: number | null; asOf: string | null }
+
+export async function loadOffset(db: Db, householdId: string): Promise<Offset> {
+  const rows = must(await db.from('settings').select('offset_balance, offset_as_of').eq('household_id', householdId));
+  const r = rows[0];
+  return { balance: r?.offset_balance == null ? null : toCents(r.offset_balance), asOf: r?.offset_as_of ?? null };
+}
+
+/** Saves only the offset columns, leaving the business starting figure in the same row alone. */
+export async function saveOffset(db: Db, householdId: string, o: Offset): Promise<void> {
+  must(await db.from('settings').upsert({
+    household_id: householdId, offset_balance: o.balance == null ? null : toDollars(o.balance), offset_as_of: o.asOf,
+  }, { onConflict: 'household_id' }));
+}
