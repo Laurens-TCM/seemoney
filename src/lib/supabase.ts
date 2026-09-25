@@ -19,6 +19,9 @@ function projectOrigin(raw: string): string | null {
 const url = projectOrigin(clean(import.meta.env.VITE_SUPABASE_URL));
 const key = clean(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
+/** VITE_ names this build received (names only; their values are public anyway). Shown on the error. */
+export const builtWith = Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')).map(k => JSON.stringify(k));
+
 /** Set when the build had no usable Supabase settings (e.g. a Vercel deploy without its env vars). */
 export const configError = !url
   ? `This copy of See The Money was built without a usable VITE_SUPABASE_URL${import.meta.env.VITE_SUPABASE_URL ? ' (it should look like https://abcd1234.supabase.co)' : ''}.`
