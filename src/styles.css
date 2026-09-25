@@ -202,3 +202,24 @@ main { min-width: 0; }
 .trip-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .trip-form input, .trip-form select { min-width: 0; }
 input[type='date'] { min-width: 0; max-width: 100%; }
+
+/* Plan */
+.equation { display: grid; grid-template-columns: 1fr auto; gap: .375rem 1rem; margin: 0; }
+.equation dt, .equation dd { margin: 0; }
+.equation dd { text-align: right; font-weight: 600; }
+.equation .total { border-top: 1px solid var(--line); padding-top: .375rem; font-weight: 800; }
+.verdict { margin: 0; }
+.goal-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .625rem .75rem; padding: .75rem 0; border-top: 1px solid var(--line); }
+.goal-row:first-of-type { border-top: 0; padding-top: 0; }
+.goal-row .full { grid-column: 1 / -1; }
+.goal-row input { min-width: 0; }
+.goal-name input { font-weight: 700; }
+.label { display: block; font-weight: 600; font-size: .875rem; margin-bottom: .25rem; }
+.per-month { font-weight: 800; padding-top: .5rem; }
+.table-scroll { overflow-x: auto; }
+.table.targets td, .table.targets th { vertical-align: middle; }
+.table.targets td:last-child { text-align: center; width: 3rem; }
+.table.targets thead th:last-child { text-align: center; }
+.table.targets tfoot th, .table.targets tfoot td { font-weight: 800; }
+input.amount-cell { width: 6.5rem; text-align: right; padding: .375rem .5rem; }
+.table.targets input[type='checkbox'] { width: 1.125rem; height: 1.125rem; accent-color: var(--chart-trips); }

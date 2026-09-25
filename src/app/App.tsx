@@ -3,8 +3,8 @@ import { useAuth } from './auth';
 import { Layout } from './Layout';
 import { Data } from './pages/Data';
 import { Overview } from './pages/Overview';
+import { Plan } from './pages/Plan';
 import { Trips } from './pages/Trips';
-import { Placeholder } from './pages/Placeholder';
 import { SignIn } from './SignIn';
 
 export function App() {
@@ -17,7 +17,7 @@ export function App() {
         <Route element={<Layout />}>
           <Route index element={<Overview />} />
           <Route path="trips" element={<Trips />} />
-          <Route path="plan" element={<Placeholder title="Plan" phase={6}>Goals, the offset, and what spending needs to look like.</Placeholder>} />
+          <Route path="plan" element={<Plan />} />
           <Route path="data" element={<Data />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
