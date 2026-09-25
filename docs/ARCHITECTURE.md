@@ -6,15 +6,20 @@ parsed and classified in the browser; classified lines are upserted to Postgres.
 Realtime keeps both phones in sync.
 
 ```
-Phone / laptop ──► React PWA ──► Supabase Auth (email one-time code)
+Phone / laptop ──► React PWA ──► Supabase Auth (email + password)
                       │   └────► Postgres (RLS: household members only)
                       └── classify.ts (pure, tested)
 ```
 
 ## Auth and access
-- Email **6-digit code** login (`signInWithOtp` then `verifyOtp({ type: 'email' })`), not a
-  link: a link opens Safari instead of the installed app. Supabase sends a link by default, so
-  the Magic Link email template must be edited to show `{{ .Token }}` (a You step).
+- **Email and password** login (`signInWithPassword`). No emails are sent, so nothing depends on
+  Supabase's email templates (which can't be edited without custom SMTP) and nothing opens a
+  link in Safari instead of the installed app. Sessions refresh automatically, so each of you
+  signs in rarely; the phones' password managers fill it in.
+- Forgotten password: the owner sets a new one in the Supabase dashboard (Auth → Users). An
+  in-app "change password" (`updateUser({ password })`) is available while signed in.
+- Email one-time codes can be added later if custom SMTP is set up (`signInWithOtp` +
+  `verifyOtp({ type: 'email' })`, template showing `{{ .Token }}`).
 - Public sign-up **disabled** in Supabase.
 - The owner creates both users in the Supabase dashboard, then runs the seed in
   `supabase/seed-household.sql` to create the household and add both as members.
@@ -40,8 +45,9 @@ See `supabase/migrations/0001_init.sql`. Key points:
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — used by the app; also added to Vercel.
 - `SUPABASE_SERVICE_ROLE_KEY` — **local only**, no `VITE_` prefix so it can never reach the
   browser build. Used only by the RLS tests. Never add it to Vercel, GitHub secrets or CI.
-- `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` — for the Supabase CLI (`db push`,
-  `gen types`). Local only.
+- `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` — for the Supabase CLI
+  (`link`, `db push`, `gen types`). Local only. The access token is project-scoped and expires;
+  generate a new one when the CLI says it's invalid.
 
 ## Database changes
 Supabase CLI migrations in `supabase/migrations/`, applied with `npx supabase db push`.

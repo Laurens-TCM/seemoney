@@ -26,12 +26,12 @@ per phase, merged to `main` when CI is green.
 
 ## Phase 2 — Supabase
 - **You:** create a Supabase project (region Sydney). Copy `.env.example` to `.env.local` and fill
-  in URL, anon key, service-role key, project ref, and a personal access token (Account →
-  Access Tokens).
-- **You:** Auth → Providers → Email: turn off "Allow new users to sign up".
-- **You:** Auth → Email Templates → Magic Link: replace the body with a message that shows the
-  code, e.g. `Your See The Money code is {{ .Token }}`. (Without this, Supabase emails a link.)
-- **You:** Auth → Users → add both email addresses.
+  in URL, publishable (anon) key, secret (service-role) key, project ref, database password, and a
+  project-scoped access token (Account → Access Tokens: Project read, Database read and write).
+- **You:** Auth → Sign In / Providers: turn off "Allow new users to sign up"; keep Email on with a
+  minimum password length of 12.
+- **You:** Auth → Users → Create new user for each of you: email, a strong password (save it in
+  your password manager), and "Auto confirm user".
 - `npx supabase link --project-ref $SUPABASE_PROJECT_REF`, `npx supabase db push`, then run
   `supabase/seed-household.sql` with your real emails; `npm run db:types`.
 - **Accept:** RLS tests (using the service-role key locally to create a throwaway outsider
@@ -39,7 +39,8 @@ per phase, merged to `main` when CI is green.
   `trip_overrides` row can't point at a trip in another household.
 
 ## Phase 3 — Sign-in and import
-- Sign-in screen: email → 6-digit code → household loaded.
+- Sign-in screen: email and password (with `autocomplete` hints so phones offer saved
+  passwords) → household loaded. "Change password" in a small account menu.
 - Data screen: pick CSV → classify on device → preview (totals, skipped rows with reasons,
   "Check: pay or loan repayment?" lines) → import (`imports` row, upsert `lines` in batches of 500).
 - **Accept:** importing the real export twice leaves the same line count; a second export that
