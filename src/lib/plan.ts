@@ -68,3 +68,33 @@ export function shareCut(
   for (const g of groups) targets[g] = trim.has(g) ? roundToTen(current[g] * ratio) : current[g];
   return { status: ratio === 0 ? 'not-enough' : 'shared', targets };
 }
+
+export interface PlanFigures {
+  goalsPm: number;
+  /** Income − extra loan principal − goal savings, per month. */
+  budget: number;
+  /** Spending minus budget: positive means a cut is needed, negative means room to spare. */
+  cut: number;
+  /** Sum of all targets. */
+  targetsTotal: number;
+  /** Targets minus budget: positive means targets are over what's left to spend. */
+  over: number;
+}
+
+/** The "What spending needs to look like" numbers, as in the prototype's Plan. */
+export function planFigures(input: {
+  incomePm: number; principalPm: number; spendPm: number; goals: Goal[]; today: string;
+  averages: Record<string, number>; savedTargets: Record<string, number | null>;
+}): PlanFigures {
+  const goalsPm = input.goals.reduce((a, g) => a + goalMonthly(g, input.today), 0);
+  const budget = leftToSpend(input.incomePm, input.principalPm, goalsPm);
+  const groups = Object.keys(input.averages).filter(g => input.averages[g] > 50);
+  const targetsTotal = groups.reduce((a, g) => a + targetFor(g, input.averages, input.savedTargets), 0);
+  return { goalsPm, budget, cut: input.spendPm - budget, targetsTotal, over: targetsTotal - budget };
+}
+
+/** What's earmarked for goals (everything set aside) and what's left in the offset. */
+export function offsetSplit(balance: number | null, goals: Goal[]): { earmarked: number; free: number | null } {
+  const earmarked = goals.reduce((a, g) => a + (g.saved ?? 0), 0);
+  return { earmarked, free: balance === null ? null : balance - earmarked };
+}
