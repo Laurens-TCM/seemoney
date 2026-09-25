@@ -1,12 +1,18 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { App } from './app/App';
+import { AuthProvider } from './app/auth';
+import './styles.css';
 
-// Placeholder until Phase 3 adds sign-in and the screens.
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1 } } });
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <main>
-      <h1>See The Money</h1>
-      <p>Coming soon.</p>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </QueryClientProvider>
   </StrictMode>,
 );
