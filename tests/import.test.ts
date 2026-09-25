@@ -27,7 +27,8 @@ describe.skipIf(!liveReady)('importing an export', () => {
   it('stores every classified line, and reads back exactly what was classified', async () => {
     const result = classifyFile(SAMPLE);
     const outcome = await importClassified(db, home, 'sample-frollo.csv', result);
-    expect(outcome).toMatchObject({ saved: result.lines.length, newLines: result.lines.length, total: result.lines.length });
+    const counted = result.lines.filter(l => l.kind !== 'excluded').length;
+    expect(outcome).toMatchObject({ saved: counted, newLines: counted, total: counted });
 
     const stored = await loadLines(db, home);
     const byId = new Map(result.lines.map(l => [l.txId, l]));
@@ -49,7 +50,7 @@ describe.skipIf(!liveReady)('importing an export', () => {
     expect(imports).toHaveLength(2);
     expect(imports[0]).toMatchObject({
       fileName: 'sample-frollo.csv', range: { from: '2026-01-02', to: '2026-03-28' }, // the 31 Mar valuation row is excluded
-      skippedReasons: { 'no transaction id': 1, pending: 1 },
+      lineCount: 103, skippedCount: 4, skippedReasons: { 'no transaction id': 1, pending: 1, excluded: 2 },
     });
   });
 
@@ -64,7 +65,7 @@ describe.skipIf(!liveReady)('importing an export', () => {
 
     const ranges = (await loadImports(member.client, gapHome)).map(i => i.range);
     const lines = await loadLines(member.client, gapHome);
-    const win = { from: '2026-01-02', to: summarise(lines).range!.to };
+    const win = { from: ranges.reduce((d, r) => (r.from < d ? r.from : d), '9999'), to: summarise(lines).range!.to };
     // January's lines run 2–31 Jan and March's 2–31 Mar, so 1 Feb to 1 Mar is uncovered.
     expect(missingRanges(win, ranges)).toEqual([{ from: '2026-02-01', to: '2026-03-01' }]);
   }, 60_000);

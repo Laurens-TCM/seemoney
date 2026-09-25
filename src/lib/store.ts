@@ -82,12 +82,15 @@ export async function loadLines(db: Db, householdId: string): Promise<Line[]> {
   }
 }
 
+/** Stored lines that count (excluded rows are stored but never counted). */
 export async function countLines(db: Db, householdId: string): Promise<number> {
-  const res = await db.from('lines').select('tx_id', { count: 'exact', head: true }).eq('household_id', householdId);
+  const res = await db.from('lines').select('tx_id', { count: 'exact', head: true })
+    .eq('household_id', householdId).neq('kind', 'excluded');
   if (res.error) throw new Error(res.error.message);
   return res.count ?? 0;
 }
 
+/** Counts are lines that count: excluded rows are stored too but left out of every figure. */
 export interface ImportOutcome { importId: string; saved: number; newLines: number; total: number }
 
 /**
@@ -108,13 +111,14 @@ export async function importClassified(
   // property valuation) can be dated after the export's last transaction.
   const dates = lines.filter(l => l.kind !== 'excluded').map(l => l.date).sort();
   if (!dates.length) throw new Error('This file has no transactions to import.');
-  const skippedReasons: Record<string, number> = {};
+  const excluded = lines.length - dates.length;
+  const skippedReasons: Record<string, number> = excluded ? { excluded } : {};
   for (const s of skipped) skippedReasons[s.reason] = (skippedReasons[s.reason] ?? 0) + 1;
 
   const before = await countLines(db, householdId);
   const imp = must<{ id: string }>(await db.from('imports').insert({
     household_id: householdId, source_filename: fileName, from_date: dates[0], to_date: dates[dates.length - 1],
-    line_count: lines.length, skipped_count: skipped.length, skipped_reasons: skippedReasons,
+    line_count: dates.length, skipped_count: skipped.length + excluded, skipped_reasons: skippedReasons,
   }).select('id').single());
 
   try {
@@ -128,5 +132,5 @@ export async function importClassified(
     throw e;
   }
   const total = await countLines(db, householdId);
-  return { importId: imp.id, saved: lines.length, newLines: total - before, total };
+  return { importId: imp.id, saved: dates.length, newLines: total - before, total };
 }
