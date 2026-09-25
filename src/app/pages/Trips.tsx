@@ -12,6 +12,7 @@ import { supabase } from '../../lib/supabase';
 import { allocateTrips, suggestTrips, tripDatesFor, type Allocation, type Candidate, type Suggestion } from '../../lib/trips';
 import { useDismissed, useGoals, useHousehold, useImports, useLines, useOverrides, useTrips } from '../data';
 import { day, money, plural, range } from '../format';
+import { useLoadState } from '../LoadState';
 
 const KINDS: Record<StoredTrip['kind'], string> = { family: 'Friends & family', holiday: 'Holiday', work: 'Work' };
 const PLACES: Record<StoredTrip['place'], string> = { melbourne: 'Melbourne & Victoria', overseas: 'Overseas', any: 'Somewhere else' };
@@ -45,7 +46,8 @@ export function Trips() {
     try { await action(); await refresh(...keys); } catch (e) { setError(`Couldn't save that (${(e as Error).message}). Try again.`); }
   }
 
-  if (lines.isLoading || overrides.isLoading || trips.isLoading || dismissed.isLoading || imports.isLoading) return <p className="muted">Loading…</p>;
+  const wait = useLoadState([lines, overrides, trips, dismissed, imports, goals], 'your trips');
+  if (wait) return <><h1>Trips</h1>{wait}</>;
   if (!current?.length) {
     return <><h1>Trips</h1><div className="panel"><p><Link to="/data">Import a Frollo export</Link> first, then trips can be found in it.</p></div></>;
   }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { supabase } from '../lib/supabase';
 import { useHousehold, useLiveUpdates } from './data';
+import { LoadState, OfflineBanner } from './LoadState';
 
 const TABS = [
   { to: '/', label: 'Overview' },
@@ -12,7 +13,8 @@ const TABS = [
 ];
 
 export function Layout() {
-  const { household, me, isLoading, error } = useHousehold();
+  const householdQuery = useHousehold();
+  const { household, me, isLoading, error } = householdQuery;
   useLiveUpdates(household?.id);
 
   return (
@@ -29,8 +31,8 @@ export function Layout() {
         ))}
       </nav>
       <main>
-        {isLoading ? <p className="muted">Loading…</p>
-          : error ? <p className="error" role="alert">Couldn't load your household. Check your connection and reload.</p>
+        <OfflineBanner />
+        {isLoading || error ? <LoadState queries={[householdQuery]} what="your household" />
           : !household ? (
             <div className="panel">
               <h1>Not in a household yet</h1>

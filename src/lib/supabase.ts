@@ -30,4 +30,7 @@ export const configError = !url
 // The placeholder is never used: main.tsx shows configError instead of the app.
 export const supabase = createClient<Database>(url ?? 'https://not-configured.invalid', key || 'none', {
   auth: { persistSession: true, autoRefreshToken: true },
+  // React Query already retries once; the library's own backoff (1s, 2s, 4s) on top of that left
+  // screens on "Loading…" for 15 seconds or more when the connection drops.
+  db: { retry: false },
 });

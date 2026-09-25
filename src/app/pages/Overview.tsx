@@ -11,6 +11,7 @@ import type { WindowMonths } from '../../lib/summary';
 import { allocateTrips } from '../../lib/trips';
 import { useBusinessOwed, useHousehold, useImports, useLines, useOverrides, useTrips, useUserSettings } from '../data';
 import { day, money, plural, range } from '../format';
+import { useLoadState } from '../LoadState';
 import { MonthChart } from '../MonthChart';
 
 const WINDOWS: WindowMonths[] = [12, 6, 3];
@@ -38,8 +39,8 @@ export function Overview() {
     [lines.data, current, overrides.data],
   );
 
-  if (lines.isLoading || imports.isLoading || overrides.isLoading || trips.isLoading) return <p className="muted">Loading…</p>;
-  if (lines.error || imports.error) return <p className="error" role="alert">Couldn't load your transactions. Check your connection and reload.</p>;
+  const wait = useLoadState([lines, imports, overrides, trips], 'your figures');
+  if (wait) return <><h1>Overview</h1>{wait}</>;
   if (!o) {
     return (
       <>

@@ -13,6 +13,7 @@ import { supabase } from '../../lib/supabase';
 import { allocateTrips } from '../../lib/trips';
 import { useGoals, useHousehold, useImports, useLines, useOffset, useOverrides, useTargets, useTrips, useUserSettings } from '../data';
 import { day, money } from '../format';
+import { useLoadState } from '../LoadState';
 
 /** Today in the phone's own time zone (you're both in Darwin), as YYYY-MM-DD. */
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -43,7 +44,8 @@ export function Plan() {
     catch (e) { setError(`Couldn't save that (${(e as Error).message}). Try again.`); }
   }
 
-  if ([lines, overrides, trips, imports, goals, targets, offset].some(q => q.isLoading)) return <p className="muted">Loading…</p>;
+  const wait = useLoadState([lines, overrides, trips, imports, goals, targets, offset], 'your plan');
+  if (wait) return <><h1>Plan</h1>{wait}</>;
   if (!o) return <><h1>Plan</h1><div className="panel"><p><Link to="/data">Import a Frollo export</Link> first, so the plan has averages to work from.</p></div></>;
 
   const averages = Object.fromEntries(o.groups.map(g => [g.group, g.perMonth]));
