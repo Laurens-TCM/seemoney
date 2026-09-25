@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>See The Money</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F1;--surface:#FFFFFF;--ink:#16242B;--muted:#5E6E75;--line:#D3DCDA;
+  --in:#1F7A6B;--out:#3E5C8A;--goal:#A86A12;--warn:#B42318;--soft:#E3EAE8;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1719;--surface:#172226;--ink:#E6EEEC;--muted:#93A3A7;--line:#2A393D;
+  --in:#4FB3A0;--out:#86A6D6;--goal:#E0A84A;--warn:#F07167;--soft:#1E2B2F;}}
+:root[data-theme="dark"]{--bg:#0F1719;--surface:#172226;--ink:#E6EEEC;--muted:#93A3A7;--line:#2A393D;
+  --in:#4FB3A0;--out:#86A6D6;--goal:#E0A84A;--warn:#F07167;--soft:#1E2B2F;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums}
+main{max-width:760px;margin:0 auto;padding:20px 18px 64px}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.35rem;margin:0 0 4px}
+h3{font-size:1rem;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.in{color:var(--in)}.out{color:var(--out)}.goal{color:var(--goal)}.warn{color:var(--warn)}
+section{margin-top:40px}
+.sub{color:var(--muted);margin-bottom:16px;max-width:60ch}
+.masthead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:10px}
+.masthead h1{font-size:1rem;font-weight:600}
+.hero{margin-top:28px;font-size:clamp(1.55rem,5.4vw,2.35rem);line-height:1.2;font-weight:500;letter-spacing:-.015em;max-width:24ch}
+.hero b{font-weight:800}
+.hero-note{margin-top:14px;max-width:58ch;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{fill:var(--muted);font-size:10px;font-family:inherit}
+.bar{fill:var(--out);opacity:.85;cursor:pointer}
+.bar.sel{opacity:1;fill:var(--ink)}
+.inc{stroke:var(--in);stroke-width:3;stroke-linecap:round}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.875rem;color:var(--muted);margin-top:8px}
+.key{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.monthinfo{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.95rem}
+.groups{list-style:none;margin:0;padding:0}
+.groups>li{border-top:1px solid var(--line)}
+.groups>li:first-child{border-top:0}
+.grow{width:100%;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;
+  background:none;border:0;color:inherit;font:inherit;text-align:left;padding:12px 2px;cursor:pointer}
+.grow .amt{font-weight:600}
+.track{grid-column:1/-1;height:6px;background:var(--soft);border-radius:3px;overflow:hidden}
+.fill{height:100%;background:var(--out);border-radius:3px}
+.detail{padding:0 2px 14px;font-size:.9rem}
+.detail table{width:100%;border-collapse:collapse}
+.detail td{padding:4px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+.detail td:last-child{text-align:right;white-space:nowrap;padding-left:12px}
+.detail h4{margin:12px 0 4px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fact .n{font-size:1.4rem;font-weight:800}
+.goalrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.goalrow:first-child{border-top:0;padding-top:0}
+.goalrow .full{grid-column:1/-1}
+.goalhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:2px}
+input[type=text],input[type=number],input[type=month],input[type=date]{width:100%;font:inherit;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:42px}
+input:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--goal);outline-offset:2px}
+.btn{font:inherit;font-weight:600;border-radius:10px;padding:10px 16px;min-height:44px;cursor:pointer;
+  border:1px solid var(--ink);background:var(--ink);color:var(--bg)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.link{border:0;background:none;color:var(--warn);padding:6px;min-height:0;font-weight:500}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.progress{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin-top:6px}
+.progress>div{height:100%;background:var(--goal)}
+.permo{font-weight:800;color:var(--goal)}
+.equation{display:grid;grid-template-columns:1fr auto;gap:6px 16px;font-size:1rem}
+.equation .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:800}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--soft);font-weight:500}
+.plan{width:100%;border-collapse:collapse;font-size:.95rem}
+.plan th{font-size:.8rem;font-weight:600;color:var(--muted);text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+.plan th:first-child{text-align:left}
+.plan td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+.plan td:first-child{text-align:left}
+.plan input[type=number]{width:96px;min-height:36px;padding:5px 8px;text-align:right}
+.plan tfoot td{font-weight:800;border-bottom:0}
+.flex{width:20px;height:20px;accent-color:var(--goal)}
+.scroll{overflow-x:auto}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.status{font-size:.875rem;color:var(--muted);min-height:1.4em;margin-top:8px}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;text-align:center}
+.hidden{display:none!important}
+.empty{padding:28px 0}
+.toggle{display:flex;gap:10px;align-items:center;margin-top:18px;font-weight:500;cursor:pointer;width:fit-content}
+.toggle input{width:22px;height:22px;accent-color:var(--goal)}
+.tripbar{fill:var(--goal)}
+.trip{margin-top:12px}
+.triphead{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 12px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:0}
+.triphead .amt{font-weight:800;font-size:1.15rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:.875rem;color:var(--muted)}
+.chips b{color:var(--ink);font-weight:600}
+.txlist{list-style:none;margin:10px 0 0;padding:0;font-size:.9rem}
+.txlist li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:6px 0;border-top:1px dashed var(--line)}
+.txlist input{width:20px;height:20px;accent-color:var(--goal)}
+.txlist .meta{display:block;font-size:.78rem;color:var(--muted)}
+.txlist li.off{opacity:.6}
+.txgroup{font-size:.8rem;font-weight:600;color:var(--muted);margin:14px 0 2px}
+.tripform{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tripform .full{grid-column:1/-1}
+select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:42px}
+.suggest li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.suggest li:first-child{border-top:0}
+.suggest ul{list-style:none;margin:8px 0 0;padding:0}
+@media (prefers-reduced-motion:no-preference){.fill,.progress>div{transition:width .3s ease}}
+</style>
+</head>
+<body>
+<main>
+  <header class="masthead">
+    <h1>See The Money</h1>
+    <span class="muted small" id="period"></span>
+  </header>
+
+  <div id="emptyState" class="empty hidden">
+    <p class="hero">Add a Frollo export to see where your money goes.</p>
+    <p class="hero-note">In Frollo, export transactions for all accounts as CSV, then choose the file under “Update the data” at the bottom of this page.</p>
+  </div>
+
+  <div id="content" class="hidden">
+    <p class="hero" id="hero"></p>
+    <p class="hero-note" id="heroNote"></p>
+    <label class="toggle" id="tripToggleWrap"><input type="checkbox" id="tripToggle"> <span>Leave trips out of regular spending</span></label>
+
+    <section aria-labelledby="h-month">
+      <h2 id="h-month">Month by month</h2>
+      <p class="sub">Bars are spending, green marks are income. Tap a month for the detail.</p>
+      <div class="panel">
+        <svg class="chart" id="chart" role="img" aria-label="Monthly income and spending"></svg>
+        <div class="legend"><span><span class="key" style="background:var(--out)"></span>Regular spending</span>
+          <span id="tripKey"><span class="key" style="background:var(--goal)"></span>Trips</span>
+          <span><span class="key" style="background:var(--in)"></span>Income</span></div>
+        <div class="monthinfo" id="monthInfo"></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-trips">
+      <h2 id="h-trips">Trips</h2>
+      <p class="sub">Each trip collects its flights, accommodation, food and getting around, so those costs sit apart from everyday spending.</p>
+      <div class="panel" id="tripSummary"></div>
+      <div id="tripList"></div>
+      <div class="panel" id="suggestBox" style="margin-top:12px"></div>
+      <div class="row"><button class="btn ghost" id="addTrip" type="button">Add a trip</button></div>
+    </section>
+
+    <section aria-labelledby="h-where">
+      <h2 id="h-where">Where it goes</h2>
+      <p class="sub" id="whereSub">Average per month. Tap a line to see the categories and who got paid.</p>
+      <div class="panel"><ul class="groups" id="groups"></ul></div>
+    </section>
+
+    <section aria-labelledby="h-aside">
+      <h2 id="h-aside">Not counted as spending</h2>
+      <p class="sub">Money that moved but wasn’t day-to-day spending, so it’s kept out of the figures above.</p>
+      <div class="panel facts" id="facts"></div>
+    </section>
+
+    <section aria-labelledby="h-goals">
+      <h2 id="h-goals">Goals</h2>
+      <p class="sub">Holidays and big expenses you’re saving for. The money stays in the offset; these just earmark part of it.</p>
+      <div class="panel">
+        <div id="goals"></div>
+        <div class="row"><button class="btn ghost" id="addGoal" type="button">Add a goal</button></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-offset">
+      <h2 id="h-offset">The offset</h2>
+      <p class="sub">Enter today’s offset balance to see how much is earmarked for goals and how much is free.</p>
+      <div class="panel">
+        <div class="goalrow" style="border:0;padding-top:0">
+          <div><label for="offBal">Offset balance ($)</label><input type="number" id="offBal" inputmode="decimal" min="0" step="100"></div>
+          <div><label for="offDate">As at</label><input type="date" id="offDate"></div>
+        </div>
+        <div class="equation" id="offsetEq"></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-plan">
+      <h2 id="h-plan">What spending needs to look like</h2>
+      <p class="sub">Income, less loan principal and goal savings, is what’s left to spend each month.</p>
+      <div class="panel">
+        <div class="equation" id="budgetEq"></div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+      <div class="panel" style="margin-top:12px">
+        <h3>Monthly targets</h3>
+        <p class="muted small" style="margin:4px 0 10px">Tick the groups you’re willing to trim, then share the cut across them. You can also type any target directly.</p>
+        <div class="scroll"><table class="plan">
+          <thead><tr><th>Group</th><th>Average</th><th>Target</th><th title="Can be trimmed">Trim</th></tr></thead>
+          <tbody id="planBody"></tbody>
+          <tfoot><tr><td>Total</td><td id="planAvg"></td><td id="planTarget"></td><td></td></tr></tfoot>
+        </table></div>
+        <div class="row">
+          <button class="btn" id="shareCut" type="button">Share the cut across ticked groups</button>
+          <button class="btn ghost" id="resetTargets" type="button">Reset to averages</button>
+        </div>
+        <p class="status" id="planStatus"></p>
+      </div>
+    </section>
+  </div>
+
+  <section aria-labelledby="h-data">
+    <h2 id="h-data">Update the data</h2>
+    <p class="sub">Export all accounts from Frollo as CSV and add the file here. It’s read on this device; the summary and spending lines are saved to the dashboard so trips can be matched.</p>
+    <div class="panel drop">
+      <input type="file" id="file" accept=".csv,text/csv" class="hidden">
+      <button class="btn" id="pick" type="button">Choose Frollo CSV</button>
+      <p class="status" id="fileStatus"></p>
+      <div class="row hidden" id="confirmRow" style="justify-content:center">
+        <button class="btn" id="saveData" type="button">Replace dashboard data</button>
+        <button class="btn ghost" id="cancelData" type="button">Cancel</button>
+      </div>
+    </div>
+    <p class="muted small" style="margin-top:10px">Built-in fixes: $950 loan repayments and card payments are treated as transfers, home loan interest counts as housing, TCM pay counts as income, the $45k TCM loan and the solar install are listed separately. Trips keep their ticked transactions when you upload a newer export.</p>
+  </section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+// Household finance processing — turns a Frollo transactions export into a summary.
+// Pure function: rows (array of objects keyed by CSV header) -> summary object.
+function processRows(rows) {
+  const GROUPS = {
+    'Home & bills': ['Mortgage interest', 'Utilities', 'Insurance', 'Home Renovation & Maintenance', 'Furniture & Homeware', 'Cable/Satellite/Telecom', 'Taxes paid'],
+    'Groceries': ['Groceries'],
+    'Eating out & drinks': ['Restaurants', 'Takeaway & Snacks', 'Cafes & Coffee', 'Bars & Pubs', 'Alcohol'],
+    'Travel & holidays': ['Travel/Holidays'],
+    'Car & transport': ['Automotive', 'Petrol', 'Taxi & Rideshare', 'Public Transport'],
+    'Health & fitness': ['Healthcare/Medical', 'Gyms & Fitness', 'Beauty & Well-being'],
+    'Kids & school': ['Child/Dependent Expenses', 'Education'],
+    'Pets': ['Pets/Pet Care'],
+    'Shopping': ['Clothing/Shoes', 'General Merchandise', 'Electronics', 'Gifts'],
+    'Fun & hobbies': ['Entertainment/Recreation', 'Hobbies', 'Subscriptions/Renewals', 'Gambling & Lotteries'],
+    'Payments to people': ['Payments to people'],
+  };
+  const catToGroup = {};
+  for (const [g, cats] of Object.entries(GROUPS)) for (const c of cats) catToGroup[c] = g;
+  const groupOf = c => catToGroup[c] || 'Other';
+
+  const INCOME_CATS = new Set(['Salary/Regular Income', 'Government Benefits', 'Interest Income', 'Taxes']);
+  const INTERNAL_CATS = new Set(['Credit Card Payments', 'Transfer Between Accounts', 'Savings', 'Mortgage']);
+
+  const clean = (r) => {
+    const m = (r.merchant_name || '').trim();
+    if (m && m !== 'Unknown') return m;
+    let d = (r.description || '').replace(/\s{2,}/g, ' ').trim();
+    d = d.replace(/^ANZ (MOBILE|INTERNET) BANKING (PAYMENT|TRANSFER) \d+\s*/i, '');
+    d = d.replace(/^PAYMENT\s+/i, '').replace(/^VISA DEBIT PURCHASE CARD \d+\s*/i, '');
+    d = d.replace(/\b\d{5,}\b/g, '').replace(/\s{2,}/g, ' ').trim();
+    d = d.replace(/^TO /i, '').replace(/^FROM /i, 'From ');
+    return d.slice(0, 34).trim();
+  };
+  const titleCase = s => s.replace(/\w\S*/g, w => w.length <= 3 && /^(TO|OF|AND|THE|PTY|LTD|NT)$/i.test(w) ? (/^(To|of|and|the)$/i.test(w) ? w.toLowerCase().replace(/^to$/, 'to') : w.toUpperCase()) : w[0].toUpperCase() + w.slice(1).toLowerCase());
+
+  const months = {};
+  const M = k => (months[k] ||= { m: k, income: 0, otherIn: 0, spend: 0, byGroup: {}, byCat: {} });
+  const totals = { income: 0, otherIn: 0, spend: 0, loanIn: 0, loanInterest: 0, tcmLoan: 0, oneOff: 0, incomeBySource: {} };
+  const oneOffs = [];
+  const merch = {}; // group -> name -> [total, count]
+  let from = null, to = null, used = 0, skipped = 0;
+  const accounts = new Set();
+  const tx = []; // spending rows: [id, date, name, out, cat, group, bucket, loc]
+  const VIC_RE = /\b(MELBOURNE|MELB|VIC|BRUNSWICK|FITZROY|YARRAVILLE|FOOTSCRAY|WILLIAMSTOWN|CARLTON|COLLINGWOOD|RICHMOND|TULLAMARINE|NORTHCOTE|ST KILDA|SEDDON|SOUTHBANK|DOCKLANDS|COBURG|THORNBURY|PRAHRAN|NEWPORT|ALTONA|KENSINGTON|ESSENDON|GEELONG|SUNSHINE|ASCOT VALE|MOONEE PONDS|ABBOTSFORD|PRESTON|BALLARAT|LORNE|TORQUAY|APOLLO BAY|DAYLESFORD|HEALESVILLE|WERRIBEE|KEW|HAWTHORN|CAMBERWELL|ELWOOD|SOUTH YARRA|WINDSOR|BRIGHTON|MARIBYRNONG|SPOTSWOOD|WEST FOOTSCRAY|KINGSVILLE)\b/;
+  const FX_RE = /\b[A-Z]{3} \d+(\.\d+)? AUD\b|\b(USD|HKD|SGD|KRW|MYR|EUR|GBP|JPY|NZD|IDR|THB)\b/;
+  let curRow = null;
+
+  for (const r of rows) {
+    const amt = parseFloat(r.amount);
+    const date = (r.transaction_date || '').slice(0, 10);
+    if (!date || isNaN(amt)) { skipped++; continue; }
+    const inc = String(r.included).toLowerCase();
+    const desc = (r.description || '').toUpperCase();
+    const acct = r.account_name || '';
+    const cat0 = r.category_name || 'Uncategorised';
+    if (inc === 'false' || /increase account balance/i.test(r.description || '')) { skipped++; continue; }
+    accounts.add(acct);
+    if (!from || date < from) from = date;
+    if (!to || date > to) to = date;
+    used++;
+    const mk = date.slice(0, 7);
+    curRow = r;
+    const isLoanAcct = /home loan|mortgage|loan/i.test(acct) && !/offset/i.test(acct);
+
+    // Home loan account: credits are repayments, debits are interest.
+    if (isLoanAcct) {
+      if (amt > 0) { totals.loanIn += amt; continue; }
+      addSpend(mk, 'Mortgage interest', amt, 'Home loan interest');
+      totals.loanInterest += -amt;
+      continue;
+    }
+    // Loan repayments leaving the offset.
+    if (amt < 0 && /PAYMENT\s+TO GOUD LAURENS/.test(desc)) continue;
+    if (INTERNAL_CATS.has(cat0)) continue;
+
+    // Money lent to Trade Creative Media (LandCruiser purchase).
+    if (/TRADE CREATIVE/.test(desc) && amt < 0) {
+      totals.tcmLoan += -amt;
+      oneOffs.push({ d: date, what: 'Loan to TCM (LandCruiser)', amt: -amt, kind: 'loan' });
+      continue;
+    }
+    if (/ONEROOF SOLAR/.test(desc)) {
+      totals.oneOff += -amt;
+      oneOffs.push({ d: date, what: 'Solar install (OneRoof)', amt: -amt, kind: 'capital' });
+      continue;
+    }
+
+    if (amt > 0) {
+      let src = null;
+      if (/TRADE CREATIVE/.test(desc)) src = 'TCM pay';
+      else if (cat0 === 'Salary/Regular Income') src = 'Salary';
+      else if (cat0 === 'Taxes') src = 'Tax refund';
+      else if (INCOME_CATS.has(cat0)) src = cat0 === 'Government Benefits' ? 'Government' : 'Interest';
+      if (src) {
+        M(mk).income += amt; totals.income += amt;
+        totals.incomeBySource[src] = (totals.incomeBySource[src] || 0) + amt;
+        continue;
+      }
+      if (cat0 === 'Transfer In' || cat0 === 'Refunds/Adjustments' || cat0 === 'Uncategorised') {
+        M(mk).otherIn += amt; totals.otherIn += amt; continue;
+      }
+      // Positive amount in a spending category = refund/rebate; nets against that category.
+      addSpend(mk, mapCat(cat0, desc), amt, clean(r));
+      continue;
+    }
+    addSpend(mk, mapCat(cat0, desc), amt, clean(r));
+  }
+
+  function mapCat(c, desc) {
+    if (/WAGAMAN OSHC/.test(desc)) return 'Child/Dependent Expenses';
+    if (/ASU UNION/.test(desc)) return 'Memberships & union';
+    if (c === 'Transfer Out') return 'Payments to people';
+    if (c === 'Other Expenses') return 'Other';
+    return c;
+  }
+  function addSpend(mk, cat, amt, name) {
+    const g = groupOf(cat), v = -amt; // positive = money out
+    const m = M(mk);
+    m.spend += v; m.byGroup[g] = (m.byGroup[g] || 0) + v; m.byCat[cat] = (m.byCat[cat] || 0) + v;
+    totals.spend += v;
+    const gm = (merch[g] ||= {}); const nm = titleCase(name || cat);
+    const e = (gm[nm] ||= [0, 0]); e[0] += v; e[1] += 1;
+    const raw = (curRow.description || '').toUpperCase();
+    let bucket = 'Other';
+    if (/QANTAS|JETSTAR|VIRGIN AU|AIRASIA|SINGAPOREAIR|HKEXPRESS|AIRWAYS|AIRLINES|REX AIR|BONZA/.test(raw) && !/INFLIGHT/.test(raw)) bucket = 'Flights';
+    else if (/HOTEL|MOTEL|AIRBNB|BOOKING\.COM|BKG\*|LODGE|YOTEL|APARTMENT|RESORT|STAYZ|HOSTEL/.test(raw) && (cat === 'Travel/Holidays')) bucket = 'Accommodation';
+    else if (g === 'Eating out & drinks' || g === 'Groceries' || /INFLIGHT/.test(raw)) bucket = 'Food & drink';
+    else if (g === 'Car & transport') bucket = 'Getting around';
+    else if (g === 'Fun & hobbies') bucket = 'Activities';
+    const loc = VIC_RE.test(raw) ? 'vic' : FX_RE.test(raw) ? 'fx' : '';
+    tx.push([String(curRow.transaction_id || (curRow.transaction_date + raw + amt)), curRow.transaction_date.slice(0, 10), nm, Math.round(v * 100) / 100, cat, g, bucket, loc]);
+  }
+  const r2 = x => Math.round(x * 100) / 100;
+  const monthList = Object.values(months).sort((a, b) => a.m < b.m ? -1 : 1).map(m => ({
+    m: m.m, income: r2(m.income), otherIn: r2(m.otherIn), spend: r2(m.spend),
+    byGroup: Object.fromEntries(Object.entries(m.byGroup).map(([k, v]) => [k, r2(v)])),
+    byCat: Object.fromEntries(Object.entries(m.byCat).map(([k, v]) => [k, r2(v)])),
+  }));
+  const top = {};
+  for (const [g, names] of Object.entries(merch)) {
+    top[g] = Object.entries(names).filter(([, v]) => v[0] > 0.5).sort((a, b) => b[1][0] - a[1][0]).slice(0, 12).map(([n, v]) => [n, r2(v[0]), v[1]]);
+  }
+  const days = from && to ? Math.round((Date.parse(to) - Date.parse(from)) / 864e5) + 1 : 0;
+  const T = {}; for (const [k, v] of Object.entries(totals)) T[k] = typeof v === 'number' ? r2(v) : Object.fromEntries(Object.entries(v).map(([a, b]) => [a, r2(b)]));
+  T.loanPrincipal = r2(totals.loanIn - totals.loanInterest);
+  return { v: 1, from, to, days, used, skipped, accounts: [...accounts].sort(), months: monthList, totals: T,
+    oneOffs: oneOffs.map(o => ({ ...o, amt: r2(o.amt) })), top, groupCats: GROUPS, tx };
+}
+(function(){
+const $ = id => document.getElementById(id);
+const MO = 30.4375, DAY = 864e5;
+const FLEX_DEFAULT = ['Eating out & drinks','Travel & holidays','Shopping','Fun & hobbies'];
+const BUCKETS = ['Flights','Accommodation','Food & drink','Getting around','Activities','Other'];
+const KINDS = {family: 'Friends & family', holiday: 'Holiday', work: 'Work'};
+const TRIPPY = new Set(['Eating out & drinks','Groceries','Travel & holidays','Car & transport','Shopping','Fun & hobbies']);
+const PLACES = {melbourne: 'Melbourne & Victoria', overseas: 'Overseas', any: 'Somewhere else'};
+const fmt = (n, dp=0) => (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString('en-AU', {minimumFractionDigits: dp, maximumFractionDigits: dp});
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const monthName = (m, long) => new Date(m + '-01T00:00:00').toLocaleDateString('en-AU', {month: long ? 'long' : 'short', year: 'numeric'});
+const shortMonth = m => new Date(m + '-01T00:00:00').toLocaleDateString('en-AU', {month: 'short'});
+const dshort = d => new Date(d + 'T00:00:00').toLocaleDateString('en-AU', {day: 'numeric', month: 'short'});
+const dlong = d => new Date(d + 'T00:00:00').toLocaleDateString('en-AU', {day: 'numeric', month: 'short', year: 'numeric'});
+const addDays = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * DAY).toISOString().slice(0, 10);
+const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / DAY);
+
+let summary = null, tx = [], plan = blankPlan();
+let db = null, canWrite = true, pending = null, selMonth = null, openGroup = null, openTrip = null, alloc = null;
+function blankPlan(){ return {goals: [], targets: {}, flex: null, offsetBalance: null, offsetAsOf: null, trips: [], hideTrips: true, dismissed: []}; }
+
+// ---------- trips ----------
+// tx row: [id, date, name, out, cat, group, bucket, loc]
+function allocate(){
+  const trips = [...(plan.trips || [])].filter(t => t.start && t.end).sort((a, b) => a.start < b.start ? -1 : 1);
+  const owner = new Map();
+  const cand = {};
+  for (const t of trips){
+    const inc = new Set(t.inc || []), exc = new Set(t.exc || []);
+    const early = addDays(t.start, -120);
+    const list = [];
+    for (const r of tx){
+      const [id, d, , , cat, grp, bucket, loc] = r;
+      const during = d >= t.start && d <= t.end;
+      const before = !during && d >= early && d < t.start && (bucket === 'Flights' || bucket === 'Accommodation');
+      if (!during && !before && !inc.has(id)) continue;
+      const placeHit = TRIPPY.has(grp) && (t.place === 'melbourne' ? loc === 'vic' : t.place === 'overseas' ? loc === 'fx' : false);
+      const auto = during && (placeHit || cat === 'Travel/Holidays');
+      list.push({r, during, auto});
+    }
+    cand[t.id] = list;
+  }
+  // forced includes first, then automatic matches; first trip to claim wins
+  for (const t of trips) for (const id of (t.inc || [])) if (!owner.has(id)) owner.set(id, t.id);
+  for (const t of trips){
+    const exc = new Set(t.exc || []);
+    for (const c of cand[t.id]) if (c.auto && !exc.has(c.r[0]) && !owner.has(c.r[0])) owner.set(c.r[0], t.id);
+  }
+  const perTrip = {}, byMonth = {}, byGroup = {}, byCat = {};
+  for (const t of trips) perTrip[t.id] = {total: 0, buckets: {}, n: 0};
+  for (const r of tx){
+    const tid = owner.get(r[0]); if (!tid || !perTrip[tid]) continue;
+    const p = perTrip[tid], v = r[3], m = r[1].slice(0, 7);
+    p.total += v; p.n++; p.buckets[r[6]] = (p.buckets[r[6]] || 0) + v;
+    byMonth[m] = (byMonth[m] || 0) + v; byGroup[r[5]] = (byGroup[r[5]] || 0) + v; byCat[r[4]] = (byCat[r[4]] || 0) + v;
+  }
+  const total = Object.values(perTrip).reduce((a, p) => a + p.total, 0);
+  return {owner, cand, perTrip, byMonth, byGroup, byCat, total, trips};
+}
+
+function suggestions(){
+  const vicRows = tx.filter(r => r[7] === 'vic' && TRIPPY.has(r[5]));
+  const vic = vicRows.map(r => r[1]).sort();
+  const clusters = [];
+  for (const d of vic){
+    const c = clusters[clusters.length - 1];
+    if (c && daysBetween(c.end, d) <= 3){ c.end = d; c.n++; } else clusters.push({start: d, end: d, n: 1});
+  }
+  const trips = plan.trips || [], dis = new Set(plan.dismissed || []);
+  return clusters.filter(c => (daysBetween(c.start, c.end) >= 1 && c.n >= 3) || c.n >= 6)
+    .map(c => ({...c, key: 'melb-' + c.start}))
+    .filter(c => !dis.has(c.key) && !trips.some(t => t.start && t.end && !(t.end < addDays(c.start, -2) || t.start > addDays(c.end, 2))))
+    .map(c => ({...c, total: vicRows.filter(r => r[1] >= c.start && r[1] <= c.end).reduce((a, r) => a + r[3], 0)}));
+}
+
+// ---------- derived numbers ----------
+function stats(){
+  const n = summary.days / MO, t = summary.totals, hide = plan.hideTrips && alloc && alloc.total > 0;
+  const groups = {}, cats = {};
+  summary.months.forEach(m => {
+    Object.entries(m.byGroup).forEach(([g, v]) => groups[g] = (groups[g] || 0) + v);
+    Object.entries(m.byCat).forEach(([c, v]) => cats[c] = (cats[c] || 0) + v);
+  });
+  if (hide){
+    Object.entries(alloc.byGroup).forEach(([g, v]) => groups[g] = (groups[g] || 0) - v);
+    Object.entries(alloc.byCat).forEach(([c, v]) => cats[c] = (cats[c] || 0) - v);
+  }
+  const per = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v / n]));
+  return {n, hide, income: t.income / n, otherIn: t.otherIn / n, principal: t.loanPrincipal / n,
+    spend: (t.spend - (hide ? alloc.total : 0)) / n, trips: (alloc ? alloc.total : 0) / n, groups: per(groups), cats: per(cats)};
+}
+function monthsUntil(ym){
+  if (!ym) return 0;
+  const now = new Date(); const [y, m] = ym.split('-').map(Number);
+  return (y - now.getFullYear()) * 12 + (m - (now.getMonth() + 1)) + 1;
+}
+function goalMonthly(g){
+  const left = Math.max(0, (+g.amount || 0) - (+g.saved || 0)), mths = monthsUntil(g.by);
+  return !left ? 0 : mths > 0 ? left / mths : left;
+}
+
+// ---------- render ----------
+function render(){
+  const has = !!(summary && summary.months && summary.months.length);
+  $('emptyState').classList.toggle('hidden', has);
+  $('content').classList.toggle('hidden', !has);
+  if (!has){ $('period').textContent = ''; return; }
+  alloc = allocate();
+  const s = stats();
+  $('period').textContent = dlong(summary.from) + ' – ' + dlong(summary.to);
+  $('tripToggleWrap').classList.toggle('hidden', !alloc.total);
+  $('tripToggle').checked = !!plan.hideTrips;
+  const gap = s.spend - s.income;
+  $('hero').innerHTML = `Over the last ${Math.round(s.n)} months you spent <b class="out">${fmt(s.spend)}</b> a month${s.hide ? ' on regular living' : ''} and earned <b class="in">${fmt(s.income)}</b>.`;
+  $('heroNote').textContent = (s.hide ? `Trips added another ${fmt(s.trips)} a month on top. ` : '') + (gap > 0
+    ? `Regular spending is ${fmt(gap)} a month more than pay income, before ${fmt(s.principal)} a month of extra loan principal.`
+    : `That leaves ${fmt(-gap)} a month after ${s.hide ? 'regular ' : ''}spending, before ${fmt(s.principal)} a month of extra loan principal.`);
+  $('whereSub').textContent = `Average per month${s.hide ? ', with trips left out' : ''}. Tap a line to see the categories and who got paid.`;
+  renderChart(); renderTrips(s); renderGroups(s); renderFacts(); renderGoals(); renderOffset(); renderPlan(s);
+}
+
+function renderChart(){
+  const ms = summary.months, W = 360, H = 190, pad = {l: 34, r: 6, t: 10, b: 22};
+  const max = Math.max(...ms.map(m => Math.max(m.spend, m.income))) * 1.08;
+  const step = (W - pad.l - pad.r) / ms.length, bw = Math.max(8, step * 0.62);
+  const y = v => pad.t + (H - pad.t - pad.b) * (1 - Math.max(0, v) / max);
+  let o = '';
+  const tick = max > 30000 ? 10000 : 5000;
+  for (let v = 0; v <= max; v += tick){
+    o += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pad.l - 4}" y="${y(v) + 3}" text-anchor="end">${v ? (v / 1000) + 'k' : '0'}</text>`;
+  }
+  ms.forEach((m, i) => {
+    const x = pad.l + i * step + (step - bw) / 2, partial = i === 0 || i === ms.length - 1;
+    const tr = Math.max(0, alloc.byMonth[m.m] || 0), reg = m.spend - tr;
+    const op = partial ? ' opacity=".45"' : '';
+    const title = `<title>${monthName(m.m, true)}: spent ${fmt(m.spend)}${tr ? ` (trips ${fmt(tr)})` : ''}, earned ${fmt(m.income)}</title>`;
+    o += `<g class="col" data-m="${m.m}" style="cursor:pointer"${op}><rect x="${x - (step - bw) / 2}" y="${pad.t}" width="${step}" height="${H - pad.t - pad.b}" fill="transparent"/>`;
+    o += `<rect class="bar${m.m === selMonth ? ' sel' : ''}" x="${x}" y="${y(reg)}" width="${bw}" height="${Math.max(0, y(0) - y(reg))}" rx="2">${title}</rect>`;
+    if (tr) o += `<rect class="tripbar" x="${x}" y="${y(reg + tr)}" width="${bw}" height="${Math.max(0, y(reg) - y(reg + tr))}" rx="2">${title}</rect>`;
+    o += `</g><line class="inc" x1="${x - 2}" x2="${x + bw + 2}" y1="${y(m.income)}" y2="${y(m.income)}"/>`;
+    o += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${shortMonth(m.m)}</text>`;
+  });
+  const svg = $('chart');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = o;
+  $('tripKey').classList.toggle('hidden', !alloc.total);
+  svg.querySelectorAll('.col').forEach(b => b.addEventListener('click', () => { selMonth = b.dataset.m; renderChart(); }));
+  const m = ms.find(x => x.m === selMonth);
+  if (!m){ $('monthInfo').innerHTML = `<span class="muted">The faded first and last months are part-months.</span>`; return; }
+  const tr = alloc.byMonth[m.m] || 0;
+  const top = Object.entries(m.byGroup).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  $('monthInfo').innerHTML = `<b>${monthName(m.m, true)}</b>: spent <b class="out">${fmt(m.spend)}</b>${tr ? ` including <b class="goal">${fmt(tr)}</b> on trips` : ''}, earned <b class="in">${fmt(m.income)}</b>` +
+    (m.otherIn > 1 ? `, plus ${fmt(m.otherIn)} other money in` : '') + `.<br><span class="muted">Biggest groups: ${top.map(([g, v]) => esc(g) + ' ' + fmt(v)).join(', ')}.</span>`;
+}
+
+function renderTrips(s){
+  const trips = alloc.trips;
+  if (!trips.length){
+    $('tripSummary').innerHTML = `<p class="muted">No trips yet. Add one below, or pick from the Melbourne visits found in your spending.</p>`;
+  } else {
+    const b = {}; trips.forEach(t => Object.entries(alloc.perTrip[t.id].buckets).forEach(([k, v]) => b[k] = (b[k] || 0) + v));
+    $('tripSummary').innerHTML = `<p class="hero" style="margin:0;font-size:1.3rem">${trips.length} trip${trips.length === 1 ? '' : 's'} cost <b class="goal">${fmt(alloc.total)}</b>, about ${fmt(s.trips)} a month.</p>
+      <div class="chips">${BUCKETS.filter(k => b[k]).map(k => `<span>${k} <b>${fmt(b[k])}</b></span>`).join('')}</div>
+      <div class="row"><button class="btn" id="tripGoal" type="button">Save for the next 12 months of trips</button></div>`;
+    $('tripGoal').addEventListener('click', () => {
+      const d = new Date(); d.setMonth(d.getMonth() + 12);
+      plan.goals.push({name: 'Trips, next 12 months', amount: Math.round(alloc.total / 100) * 100, by: d.toISOString().slice(0, 7), saved: 0});
+      savePlan(); render();
+      document.getElementById('h-goals').scrollIntoView({behavior: 'smooth'});
+    });
+  }
+  $('tripList').innerHTML = trips.map(t => tripCard(t)).join('');
+  wireTrips();
+  const sug = suggestions();
+  $('suggestBox').classList.toggle('hidden', !sug.length);
+  $('suggestBox').innerHTML = sug.length ? `<h3>Melbourne visits found in your spending</h3>
+    <p class="muted small">Days with eating out, shopping or getting around in Victoria. Add any that were trips; flights booked beforehand can be ticked on the trip.</p>
+    <ul class="suggest">${sug.map(c => `<li><span><b>${dshort(c.start)}${c.end !== c.start ? ' – ' + dshort(c.end) : ''} ${c.start.slice(0, 4)}</b><br><span class="muted small">${c.n} purchases in Victoria, ${fmt(c.total)}</span></span>
+      <span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost" type="button" data-sadd="${c.key}">Add trip</button><button class="btn link" style="color:var(--muted)" type="button" data-sdis="${c.key}">Not a trip</button></span></li>`).join('')}</ul>` : '';
+  $('suggestBox').querySelectorAll('[data-sadd]').forEach(btn => btn.addEventListener('click', () => {
+    const c = sug.find(x => x.key === btn.dataset.sadd); if (!c) return;
+    const t = {id: 't' + Date.now().toString(36), name: 'Melbourne, ' + monthName(c.start.slice(0, 7), true), start: addDays(c.start, -1), end: addDays(c.end, 1), kind: 'family', place: 'melbourne', inc: [], exc: []};
+    plan.trips.push(t); openTrip = t.id; savePlan(); render();
+  }));
+  $('suggestBox').querySelectorAll('[data-sdis]').forEach(btn => btn.addEventListener('click', () => {
+    (plan.dismissed ||= []).push(btn.dataset.sdis); savePlan(); render();
+  }));
+}
+
+function tripCard(t){
+  const p = alloc.perTrip[t.id] || {total: 0, buckets: {}, n: 0}, open = openTrip === t.id;
+  const nights = t.start && t.end ? daysBetween(t.start, t.end) : 0;
+  let body = '';
+  if (open){
+    const list = (alloc.cand[t.id] || []).slice().sort((a, b) => a.r[1] < b.r[1] ? -1 : 1);
+    const row = c => { const r = c.r, mine = alloc.owner.get(r[0]) === t.id, other = alloc.owner.get(r[0]) && !mine;
+      const otherName = other ? (plan.trips.find(x => x.id === alloc.owner.get(r[0])) || {}).name : '';
+      return `<li class="${mine ? '' : 'off'}"><input type="checkbox" data-tx="${esc(r[0])}" ${mine ? 'checked' : ''} ${other ? 'disabled' : ''} aria-label="Include ${esc(r[2])}">
+        <span>${esc(r[2])}<span class="meta">${dshort(r[1])} · ${esc(r[6])}${other ? ' · in ' + esc(otherName) : ''}</span></span><span>${fmt(r[3], 2)}</span></li>`; };
+    const before = list.filter(c => !c.during), during = list.filter(c => c.during);
+    body = `<div class="tripform">
+        <div class="full"><label>Trip name</label><input type="text" data-tf="name" value="${esc(t.name)}"></div>
+        <div><label>From</label><input type="date" data-tf="start" value="${esc(t.start)}"></div>
+        <div><label>To</label><input type="date" data-tf="end" value="${esc(t.end)}"></div>
+        <div><label>Type</label><select data-tf="kind">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${t.kind === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div><label>Where</label><select data-tf="place">${Object.entries(PLACES).map(([k, v]) => `<option value="${k}" ${t.place === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      </div>
+      <p class="muted small" style="margin-top:12px">Ticked lines count toward this trip and come out of regular spending. Spending in ${t.place === 'melbourne' ? 'Victoria' : t.place === 'overseas' ? 'foreign currency' : 'the travel category'} during the trip is ticked for you.</p>
+      ${before.length ? `<p class="txgroup">Flights and stays booked in the 4 months before</p><ul class="txlist">${before.map(row).join('')}</ul>` : ''}
+      <p class="txgroup">Spending during the trip</p>${during.length ? `<ul class="txlist">${during.map(row).join('')}</ul>` : '<p class="muted small">Nothing between these dates.</p>'}
+      <div class="row"><button class="btn link" type="button" data-tdel="${t.id}">Delete trip</button></div>`;
+  }
+  return `<div class="panel trip" data-trip="${t.id}">
+    <button class="triphead" type="button" aria-expanded="${open}" data-topen="${t.id}">
+      <span><b>${esc(t.name || 'Untitled trip')}</b><br><span class="muted small">${t.start ? dlong(t.start) : '?'} – ${t.end ? dlong(t.end) : '?'} · ${nights} nights · ${KINDS[t.kind] || ''}</span></span>
+      <span class="amt goal">${fmt(p.total)}</span></button>
+    <div class="chips">${BUCKETS.filter(k => p.buckets[k]).map(k => `<span>${k} <b>${fmt(p.buckets[k])}</b></span>`).join('') || '<span>No costs ticked yet</span>'}</div>
+    ${body}</div>`;
+}
+
+function wireTrips(){
+  const box = $('tripList');
+  box.querySelectorAll('[data-topen]').forEach(b => b.addEventListener('click', () => { openTrip = openTrip === b.dataset.topen ? null : b.dataset.topen; render(); }));
+  box.querySelectorAll('[data-tf]').forEach(inp => inp.addEventListener('change', e => {
+    const t = plan.trips.find(x => x.id === e.target.closest('[data-trip]').dataset.trip); if (!t) return;
+    t[e.target.dataset.tf] = e.target.value;
+    if (t.start && t.end && t.end < t.start) t.end = t.start;
+    savePlan(); render();
+  }));
+  box.querySelectorAll('[data-tx]').forEach(cb => cb.addEventListener('change', e => {
+    const t = plan.trips.find(x => x.id === e.target.closest('[data-trip]').dataset.trip); if (!t) return;
+    const id = e.target.dataset.tx; t.inc = (t.inc || []).filter(x => x !== id); t.exc = (t.exc || []).filter(x => x !== id);
+    (e.target.checked ? t.inc : t.exc).push(id);
+    savePlan(); render();
+  }));
+  box.querySelectorAll('[data-tdel]').forEach(b => b.addEventListener('click', () => {
+    const t = plan.trips.find(x => x.id === b.dataset.tdel);
+    if (!confirm(`Delete “${t ? t.name : 'this trip'}”? Its costs go back into regular spending.`)) return;
+    plan.trips = plan.trips.filter(x => x.id !== b.dataset.tdel); openTrip = null; savePlan(); render();
+  }));
+}
+
+function renderGroups(s){
+  const gs = Object.entries(s.groups).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]);
+  const max = gs.length ? gs[0][1] : 1;
+  const all = Object.values(summary.groupCats).flat();
+  const catsOf = g => Object.entries(s.cats).filter(([c]) => g === 'Other' ? !all.includes(c) : (summary.groupCats[g] || []).includes(c)).filter(([, x]) => Math.abs(x) > 0.5).sort((a, b) => b[1] - a[1]);
+  $('groups').innerHTML = gs.map(([g, v]) => {
+    const cats = catsOf(g), payees = (summary.top[g] || []).slice(0, 10), open = openGroup === g;
+    return `<li><button class="grow" type="button" aria-expanded="${open}" data-g="${esc(g)}">
+      <span>${esc(g)}</span><span class="amt">${fmt(v)}</span>
+      <span class="track"><span class="fill" style="display:block;width:${(v / max * 100).toFixed(1)}%"></span></span></button>
+      <div class="detail${open ? '' : ' hidden'}">
+        ${cats.length > 1 ? `<h4>Categories, per month</h4><table>${cats.map(([c, x]) => `<tr><td>${esc(c)}</td><td>${fmt(x)}</td></tr>`).join('')}</table>` : ''}
+        <h4>Biggest payees, whole year${s.hide ? ', trips included' : ''}</h4><table>${payees.map(([n, t, c]) => `<tr><td>${esc(n)} <span class="muted">× ${c}</span></td><td>${fmt(t)}</td></tr>`).join('')}</table>
+      </div></li>`;
+  }).join('');
+  $('groups').querySelectorAll('.grow').forEach(b => b.addEventListener('click', () => { openGroup = openGroup === b.dataset.g ? null : b.dataset.g; renderGroups(stats()); }));
+}
+
+function renderFacts(){
+  const t = summary.totals, grouped = [];
+  summary.oneOffs.forEach(o => { const e = grouped.find(x => x.what === o.what); e ? (e.amt += o.amt, e.list.push(o)) : grouped.push({what: o.what, amt: o.amt, list: [o]}); });
+  const items = [['Extra home loan principal', t.loanPrincipal, `Repayments of ${fmt(t.loanIn)} less ${fmt(t.loanInterest)} interest. The interest is counted in Home & bills.`],
+    ...grouped.map(g => [g.what, g.amt, g.list.map(o => dshort(o.d) + ' ' + fmt(o.amt)).join(', ') + (g.what.startsWith('Loan') ? '. Owed back to the household.' : '')])];
+  $('facts').innerHTML = items.map(([w, v, note]) => `<div class="fact"><div class="n">${fmt(v)}</div><div>${esc(w)}</div><div class="muted small">${esc(note)}</div></div>`).join('');
+}
+
+function renderGoals(){
+  const box = $('goals');
+  if (!plan.goals.length){ box.innerHTML = `<p class="muted">No goals yet. Add one for the next holiday or a big expense.</p>`; return; }
+  box.innerHTML = plan.goals.map((g, i) => {
+    const pm = goalMonthly(g), mths = monthsUntil(g.by), pct = g.amount ? Math.min(100, (+g.saved || 0) / g.amount * 100) : 0;
+    const when = !g.by ? 'Set a target month' : mths <= 0 ? 'Target month has passed' : `${mths} month${mths === 1 ? '' : 's'} to go`;
+    return `<div class="goalrow" data-i="${i}">
+      <div class="full goalhead"><input type="text" data-f="name" value="${esc(g.name)}" placeholder="Goal name" aria-label="Goal name">
+        <button class="btn link" type="button" data-del="${i}">Remove</button></div>
+      <div><label>Amount ($)</label><input type="number" data-f="amount" inputmode="decimal" min="0" step="100" value="${g.amount ?? ''}"></div>
+      <div><label>Needed by</label><input type="month" data-f="by" value="${esc(g.by)}"></div>
+      <div><label>Set aside so far ($)</label><input type="number" data-f="saved" inputmode="decimal" min="0" step="100" value="${g.saved ?? ''}"></div>
+      <div><label>${esc(when)}</label><div class="permo">${fmt(pm)} a month</div></div>
+      <div class="full"><div class="progress"><div style="width:${pct.toFixed(1)}%"></div></div>
+        <div class="muted small" style="margin-top:4px">${fmt(+g.saved || 0)} of ${fmt(+g.amount || 0)} set aside</div></div></div>`;
+  }).join('');
+  box.querySelectorAll('input[data-f]').forEach(inp => inp.addEventListener('change', e => {
+    const i = +e.target.closest('.goalrow').dataset.i, f = e.target.dataset.f;
+    plan.goals[i][f] = (f === 'amount' || f === 'saved') ? (e.target.value === '' ? null : +e.target.value) : e.target.value;
+    savePlan(); renderGoals(); renderOffset(); renderPlan(stats());
+  }));
+  box.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => { plan.goals.splice(+b.dataset.del, 1); savePlan(); renderGoals(); renderOffset(); renderPlan(stats()); }));
+}
+
+function renderOffset(){
+  const bal = plan.offsetBalance;
+  if (document.activeElement !== $('offBal')) $('offBal').value = bal ?? '';
+  if (document.activeElement !== $('offDate')) $('offDate').value = plan.offsetAsOf || '';
+  const ear = plan.goals.reduce((a, g) => a + (+g.saved || 0), 0);
+  if (bal == null){ $('offsetEq').innerHTML = `<span class="muted">Earmarked for goals</span><span class="goal">${fmt(ear)}</span>`; return; }
+  const free = bal - ear;
+  $('offsetEq').innerHTML = `<span>Offset balance</span><span>${fmt(bal)}</span><span class="muted">Earmarked for goals</span><span class="goal">−${fmt(ear)}</span>
+    <span class="tot">Free buffer</span><span class="tot${free < 0 ? ' warn' : ''}">${fmt(free)}</span>`;
+}
+
+const flexSet = () => new Set(plan.flex || FLEX_DEFAULT);
+const targetFor = (g, s) => plan.targets[g] != null ? plan.targets[g] : Math.round((s.groups[g] || 0) / 10) * 10;
+
+function renderPlan(s){
+  const goalsMo = plan.goals.reduce((a, g) => a + goalMonthly(g), 0), budget = s.income - s.principal - goalsMo;
+  $('budgetEq').innerHTML = `<span>Income</span><span class="in">${fmt(s.income)}</span>
+    <span class="muted">Extra loan principal</span><span>−${fmt(s.principal)}</span>
+    <span class="muted">Goal savings</span><span class="goal">−${fmt(goalsMo)}</span>
+    <span class="tot">Left to spend each month</span><span class="tot">${fmt(budget)}</span>`;
+  const gs = Object.entries(s.groups).filter(([, v]) => v > 0.5).sort((a, b) => b[1] - a[1]), flex = flexSet();
+  let tt = 0;
+  $('planBody').innerHTML = gs.map(([g, v]) => { const t = targetFor(g, s); tt += t;
+    return `<tr><td>${esc(g)}</td><td>${fmt(v)}</td><td><input type="number" min="0" step="10" data-t="${esc(g)}" value="${t}" aria-label="Target for ${esc(g)}"></td>
+      <td><input type="checkbox" class="flex" data-x="${esc(g)}" ${flex.has(g) ? 'checked' : ''} aria-label="Trim ${esc(g)}"></td></tr>`; }).join('');
+  $('planAvg').textContent = fmt(s.spend); $('planTarget').textContent = fmt(tt);
+  const cut = s.spend - budget, over = tt - budget;
+  const tripGoal = plan.goals.some(g => /trip/i.test(g.name || ''));
+  $('verdict').innerHTML = (cut > 0
+    ? `To fund these goals, ${s.hide ? 'regular ' : ''}spending needs to come down by <b class="warn">${fmt(cut)} a month</b>, from ${fmt(s.spend)} to ${fmt(budget)}.`
+    : `Your average ${s.hide ? 'regular ' : ''}spending fits, with ${fmt(-cut)} a month to spare.`) +
+    (s.hide && !tripGoal ? `<br><span class="muted small">Trips (${fmt(s.trips)} a month) aren’t in these averages. Add a trips goal so they’re covered.</span>` : '');
+  $('planStatus').innerHTML = Math.abs(over) < 1 ? 'Your targets add up exactly to what’s left to spend.'
+    : over > 0 ? `Targets are <span class="warn">${fmt(over)} a month over</span> what’s left to spend.` : `Targets leave ${fmt(-over)} a month unallocated, which stays in the offset.`;
+  $('planBody').querySelectorAll('input[data-t]').forEach(inp => inp.addEventListener('change', e => { plan.targets[e.target.dataset.t] = e.target.value === '' ? null : Math.max(0, +e.target.value); savePlan(); renderPlan(stats()); }));
+  $('planBody').querySelectorAll('input[data-x]').forEach(inp => inp.addEventListener('change', e => { const f = flexSet(); e.target.checked ? f.add(e.target.dataset.x) : f.delete(e.target.dataset.x); plan.flex = [...f]; savePlan(); }));
+}
+
+function shareCut(){
+  const s = stats(), goalsMo = plan.goals.reduce((a, g) => a + goalMonthly(g), 0), budget = s.income - s.principal - goalsMo;
+  const gs = Object.keys(s.groups).filter(g => s.groups[g] > 0.5), flex = flexSet();
+  const cur = Object.fromEntries(gs.map(g => [g, targetFor(g, s)]));
+  const need = Object.values(cur).reduce((a, b) => a + b, 0) - budget;
+  const fx = gs.filter(g => flex.has(g)), fxTotal = fx.reduce((a, g) => a + cur[g], 0);
+  if (need <= 0){ $('planStatus').textContent = 'Nothing to cut: targets already fit.'; return; }
+  if (!fx.length || fxTotal <= 0){ $('planStatus').textContent = 'Tick at least one group to trim.'; return; }
+  const ratio = Math.max(0, 1 - need / fxTotal);
+  fx.forEach(g => plan.targets[g] = Math.round(cur[g] * ratio / 10) * 10);
+  gs.filter(g => !flex.has(g)).forEach(g => plan.targets[g] = cur[g]);
+  savePlan(); renderPlan(s);
+  if (ratio === 0) $('planStatus').innerHTML += ' <span class="warn">Even cutting the ticked groups to zero doesn’t close the gap. Tick more groups or push a goal date out.</span>';
+}
+
+// ---------- persistence ----------
+let saveTimer = null, saving = false, again = false;
+function savePlan(){
+  if (!db || !canWrite) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async function run(){
+    if (saving){ again = true; return; }
+    saving = true;
+    try { await db.doc('household/plan').set(JSON.parse(JSON.stringify(plan))); }
+    catch (e){ if (e && e.code === 'invalid_argument') canWrite = false; }
+    saving = false;
+    if (again){ again = false; run(); }
+  }, 600);
+}
+let loadedTxFor = null;
+async function loadTx(){
+  if (!db || !summary || !summary.txMonths) return;
+  const key = summary.generatedAt || summary.to;
+  if (loadedTxFor === key) return;
+  loadedTxFor = key;
+  try {
+    const snap = await db.collection('tx').get(), want = new Set(summary.txMonths), rows = [];
+    snap.docs.forEach(d => { if (want.has(d.id)){ const b = d.data(); if (b && Array.isArray(b.rows)) rows.push(...b.rows); } });
+    tx = rows; render();
+  } catch (e){ loadedTxFor = null; }
+}
+
+// ---------- CSV upload ----------
+$('pick').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  if (typeof Papa === 'undefined'){ $('fileStatus').textContent = 'The CSV reader didn’t load. Check your connection and reload the page.'; return; }
+  $('fileStatus').textContent = 'Reading ' + file.name + '…';
+  Papa.parse(file, {header: true, skipEmptyLines: true, complete: res => {
+    const cols = res.meta.fields || [], need = ['amount', 'transaction_date', 'description', 'account_name', 'category_name'];
+    const missing = need.filter(c => !cols.includes(c));
+    if (missing.length){ $('fileStatus').textContent = `This doesn’t look like a Frollo transactions export: missing ${missing.join(', ')}.`; return; }
+    try { pending = processRows(res.data); pending.source = file.name; pending.generatedAt = new Date().toISOString(); }
+    catch (err){ $('fileStatus').textContent = 'Couldn’t process that file: ' + err.message; return; }
+    const n = pending.days / MO;
+    $('fileStatus').innerHTML = `${pending.used.toLocaleString()} transactions from ${pending.accounts.length} accounts, ${esc(pending.from)} to ${esc(pending.to)}. Spending ${fmt(pending.totals.spend / n)} a month, income ${fmt(pending.totals.income / n)}.`;
+    $('confirmRow').classList.remove('hidden');
+  }, error: err => { $('fileStatus').textContent = 'Couldn’t read that file: ' + err.message; }});
+  e.target.value = '';
+});
+$('cancelData').addEventListener('click', () => { pending = null; $('confirmRow').classList.add('hidden'); $('fileStatus').textContent = ''; });
+$('saveData').addEventListener('click', async () => {
+  if (!pending) return;
+  const {tx: rows, ...sum} = pending; pending = null;
+  const byM = {}; rows.forEach(r => (byM[r[1].slice(0, 7)] ||= []).push(r));
+  sum.txMonths = Object.keys(byM).sort();
+  const oldMonths = summary && summary.txMonths ? summary.txMonths : [];
+  summary = sum; tx = rows; loadedTxFor = sum.generatedAt; selMonth = null;
+  $('confirmRow').classList.add('hidden'); render();
+  if (!db){ $('fileStatus').textContent = 'Showing this file on this device only. It isn’t saved to the shared dashboard here.'; return; }
+  $('saveData').disabled = true; $('fileStatus').textContent = 'Saving…';
+  try {
+    for (const m of sum.txMonths) await db.doc('tx/' + m).set({rows: byM[m]});
+    for (const m of oldMonths) if (!byM[m]) await db.doc('tx/' + m).delete();
+    await db.doc('household/summary').set(sum);
+    $('fileStatus').textContent = 'Dashboard updated. Anyone you share it with sees the new figures.';
+  } catch (e){ $('fileStatus').textContent = e && e.code === 'invalid_argument' ? 'You can view this dashboard but not change its data. Ask the owner to make you a Contributor.' : 'Couldn’t save everything to the dashboard. Try again in a moment.'; }
+  $('saveData').disabled = false;
+});
+
+$('addGoal').addEventListener('click', () => {
+  const d = new Date(); d.setMonth(d.getMonth() + 12);
+  plan.goals.push({name: '', amount: null, by: d.toISOString().slice(0, 7), saved: 0});
+  savePlan(); renderGoals();
+  const inputs = $('goals').querySelectorAll('input[data-f="name"]'); inputs[inputs.length - 1]?.focus();
+});
+$('addTrip').addEventListener('click', () => {
+  const end = summary ? summary.to : new Date().toISOString().slice(0, 10);
+  const t = {id: 't' + Date.now().toString(36), name: 'New trip', start: addDays(end, -6), end, kind: 'family', place: 'melbourne', inc: [], exc: []};
+  plan.trips.push(t); openTrip = t.id; savePlan(); render();
+  document.querySelector(`[data-trip="${t.id}"] input[data-tf="name"]`)?.focus();
+});
+$('tripToggle').addEventListener('change', e => { plan.hideTrips = e.target.checked; savePlan(); render(); });
+$('offBal').addEventListener('change', e => { plan.offsetBalance = e.target.value === '' ? null : +e.target.value; if (!plan.offsetAsOf) plan.offsetAsOf = new Date().toISOString().slice(0, 10); savePlan(); renderOffset(); });
+$('offDate').addEventListener('change', e => { plan.offsetAsOf = e.target.value || null; savePlan(); });
+$('shareCut').addEventListener('click', shareCut);
+$('resetTargets').addEventListener('click', () => { plan.targets = {}; savePlan(); renderPlan(stats()); $('planStatus').textContent = 'Targets reset to your averages.'; });
+
+// ---------- start ----------
+render();
+(async () => {
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e){ db = null; }
+  if (!db){ if (!summary) $('fileStatus').textContent = 'Saved data isn’t available in this view. You can still add a CSV to look at it here.'; return; }
+  try { const user = await window.claude.use('user'); if (user && user.can && (await user.can('data.write')) === false) canWrite = false; } catch (e){}
+  if (!canWrite){ $('pick').disabled = true; $('fileStatus').textContent = 'View only. Ask the owner to make you a Contributor to update the data, trips or goals.'; }
+  db.doc('household/summary').onSnapshot(snap => { if (snap.exists){ summary = snap.data(); render(); loadTx(); } else render(); }, () => {});
+  db.doc('household/plan').onSnapshot(snap => {
+    if (snap.metadata && snap.metadata.hasPendingWrites) return;
+    if (snap.exists){ plan = {...blankPlan(), ...JSON.parse(JSON.stringify(snap.data()))}; if (!plan.targets) plan.targets = {}; if (!plan.trips) plan.trips = []; if (summary) render(); }
+  }, () => {});
+})();
+})();
+</script></body></html>

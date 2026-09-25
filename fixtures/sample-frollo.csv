@@ -1,0 +1,108 @@
+transaction_id,description,user_description,amount,currency,transaction_date,posted_date,account_number,account_name,credit_debit,transaction_type,provider_name,merchant_name,budget_category,category_name,user_tags,notes,included
+1001,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-01-02,2026-01-02,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1002,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-01-16,2026-01-16,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1003,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-01-05,2026-01-05,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1004,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-01-19,2026-01-19,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1005,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-01-06,2026-01-06,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1006,LOAN PAYMENT,,950.00,AUD,2026-01-06,2026-01-06,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1007,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-01-13,2026-01-13,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1008,LOAN PAYMENT,,950.00,AUD,2026-01-13,2026-01-13,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1009,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-01-20,2026-01-20,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1010,LOAN PAYMENT,,950.00,AUD,2026-01-20,2026-01-20,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1011,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-01-27,2026-01-27,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1012,LOAN PAYMENT,,950.00,AUD,2026-01-27,2026-01-27,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1013,INTEREST,,-2400.00,AUD,2026-01-28,2026-01-28,xxxx,Variable Home Loan,debit,payment,ANZ,Unknown,lifestyle,Other Expenses,,,True
+1014,ANZ INTERNET BANKING PAYMENT 12345 TO ANZ CARD,,-3000.00,AUD,2026-01-25,2026-01-25,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1015,PAYMENT THANKYOU,,3000.00,AUD,2026-01-25,2026-01-25,xxxx,ANZ Rewards Black Visa,credit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1016,ANZ M-BANKING FUNDS TFER TRANSFER 1 TO 2,,-500.00,AUD,2026-01-10,2026-01-10,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,goals,Savings,,,True
+1017,ANZ M-BANKING FUNDS TFER TRANSFER 1 FROM 2,,500.00,AUD,2026-01-10,2026-01-10,xxxx,ANZ Online Saver,credit,payment,ANZ,Unknown,goals,Savings,,,True
+1018,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-01-03,2026-01-03,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1019,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-01-09,2026-01-09,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1020,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-01-15,2026-01-15,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1021,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-01-22,2026-01-22,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1022,JACANA ENERGY           DARWIN,,-310.00,AUD,2026-01-12,2026-01-12,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Jacana Energy,living,Utilities,,,True
+1023,ANZ MOBILE BANKING PAYMENT 555 TO Milkwood Steiner School,,-450.00,AUD,2026-01-14,2026-01-14,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1024,PAYMENT                                 TO WAGAMAN OSHC     F000,,-35.00,AUD,2026-01-18,2026-01-18,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Uncategorised,,,True
+1025,CHARLIES OF DARWIN      DARWIN,,-120.00,AUD,2026-01-21,2026-01-21,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Restaurants,,,True
+1026,PAYMENT FROM A FRIEND,,50.00,AUD,2026-01-24,2026-01-24,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1027,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-02-02,2026-02-02,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1028,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-02-16,2026-02-16,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1029,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-02-05,2026-02-05,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1030,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-02-19,2026-02-19,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1031,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-02-06,2026-02-06,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1032,LOAN PAYMENT,,950.00,AUD,2026-02-06,2026-02-06,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1033,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-02-13,2026-02-13,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1034,LOAN PAYMENT,,950.00,AUD,2026-02-13,2026-02-13,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1035,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-02-20,2026-02-20,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1036,LOAN PAYMENT,,950.00,AUD,2026-02-20,2026-02-20,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1037,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-02-27,2026-02-27,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1038,LOAN PAYMENT,,950.00,AUD,2026-02-27,2026-02-27,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1039,INTEREST,,-2400.00,AUD,2026-02-28,2026-02-28,xxxx,Variable Home Loan,debit,payment,ANZ,Unknown,lifestyle,Other Expenses,,,True
+1040,ANZ INTERNET BANKING PAYMENT 12345 TO ANZ CARD,,-3000.00,AUD,2026-02-25,2026-02-25,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1041,PAYMENT THANKYOU,,3000.00,AUD,2026-02-25,2026-02-25,xxxx,ANZ Rewards Black Visa,credit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1042,ANZ M-BANKING FUNDS TFER TRANSFER 1 TO 2,,-500.00,AUD,2026-02-10,2026-02-10,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,goals,Savings,,,True
+1043,ANZ M-BANKING FUNDS TFER TRANSFER 1 FROM 2,,500.00,AUD,2026-02-10,2026-02-10,xxxx,ANZ Online Saver,credit,payment,ANZ,Unknown,goals,Savings,,,True
+1044,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-02-03,2026-02-03,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1045,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-02-09,2026-02-09,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1046,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-02-15,2026-02-15,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1047,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-02-22,2026-02-22,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1048,JACANA ENERGY           DARWIN,,-310.00,AUD,2026-02-12,2026-02-12,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Jacana Energy,living,Utilities,,,True
+1049,ANZ MOBILE BANKING PAYMENT 555 TO Milkwood Steiner School,,-450.00,AUD,2026-02-14,2026-02-14,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1050,PAYMENT                                 TO WAGAMAN OSHC     F000,,-35.00,AUD,2026-02-18,2026-02-18,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Uncategorised,,,True
+1051,CHARLIES OF DARWIN      DARWIN,,-120.00,AUD,2026-02-21,2026-02-21,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Restaurants,,,True
+1052,PAYMENT FROM A FRIEND,,50.00,AUD,2026-02-24,2026-02-24,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1053,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-03-02,2026-03-02,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1054,PAY/SALARY FROM NEWPAY - NTPS,,3900.00,AUD,2026-03-16,2026-03-16,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Salary/Regular Income,,,True
+1055,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-03-05,2026-03-05,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1056,PAYMENT FROM TRADE CREATIVE MEDIA PTY LT,,2950.00,AUD,2026-03-19,2026-03-19,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1057,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-03-06,2026-03-06,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1058,LOAN PAYMENT,,950.00,AUD,2026-03-06,2026-03-06,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1059,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-03-13,2026-03-13,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1060,LOAN PAYMENT,,950.00,AUD,2026-03-13,2026-03-13,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1061,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-03-20,2026-03-20,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1062,LOAN PAYMENT,,950.00,AUD,2026-03-20,2026-03-20,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1063,PAYMENT                                 TO GOUD LAURENS SEBASTIAN,,-950.00,AUD,2026-03-27,2026-03-27,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1064,LOAN PAYMENT,,950.00,AUD,2026-03-27,2026-03-27,xxxx,Variable Home Loan,credit,payment,ANZ,Unknown,living,Mortgage,,,True
+1065,INTEREST,,-2400.00,AUD,2026-03-28,2026-03-28,xxxx,Variable Home Loan,debit,payment,ANZ,Unknown,lifestyle,Other Expenses,,,True
+1066,ANZ INTERNET BANKING PAYMENT 12345 TO ANZ CARD,,-3000.00,AUD,2026-03-25,2026-03-25,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1067,PAYMENT THANKYOU,,3000.00,AUD,2026-03-25,2026-03-25,xxxx,ANZ Rewards Black Visa,credit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1068,ANZ M-BANKING FUNDS TFER TRANSFER 1 TO 2,,-500.00,AUD,2026-03-10,2026-03-10,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,goals,Savings,,,True
+1069,ANZ M-BANKING FUNDS TFER TRANSFER 1 FROM 2,,500.00,AUD,2026-03-10,2026-03-10,xxxx,ANZ Online Saver,credit,payment,ANZ,Unknown,goals,Savings,,,True
+1070,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-03-03,2026-03-03,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1071,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-03-09,2026-03-09,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1072,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-03-15,2026-03-15,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1073,WOOLWORTHS 1234        CASUARINA,,-180.00,AUD,2026-03-22,2026-03-22,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Woolworths,living,Groceries,,,True
+1074,JACANA ENERGY           DARWIN,,-310.00,AUD,2026-03-12,2026-03-12,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Jacana Energy,living,Utilities,,,True
+1075,ANZ MOBILE BANKING PAYMENT 555 TO Milkwood Steiner School,,-450.00,AUD,2026-03-14,2026-03-14,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1076,PAYMENT                                 TO WAGAMAN OSHC     F000,,-35.00,AUD,2026-03-18,2026-03-18,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Uncategorised,,,True
+1077,CHARLIES OF DARWIN      DARWIN,,-120.00,AUD,2026-03-21,2026-03-21,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Restaurants,,,True
+1078,PAYMENT FROM A FRIEND,,50.00,AUD,2026-03-24,2026-03-24,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1079,ANZ INTERNET BANKING PAYMENT 999 TO ONEROOF SOLAR,,-5000.00,AUD,2026-02-20,2026-02-20,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1080,ANZ INTERNET BANKING PAYMENT 998 TO Trade Creative Media,,-10000.00,AUD,2026-03-05,2026-03-05,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Transfer Out,,,True
+1081,TRANSFER FROM MCARE BENEFITS,,80.00,AUD,2026-02-11,2026-02-11,xxxx,ANZ Online Saver,credit,payment,ANZ,Unknown,living,Healthcare/Medical,,,True
+1082,GP CLINIC DARWIN,,-160.00,AUD,2026-02-01,2026-02-01,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,living,Healthcare/Medical,,,True
+1083,QANTAS AIRWAYS LTD (EC    Mascot,,-900.00,AUD,2026-01-20,2026-01-20,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Qantas,lifestyle,Travel/Holidays,,,True
+1084,1 Hotel Melbourne         Melbourne,,-400.00,AUD,2026-03-10,2026-03-10,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Travel/Holidays,,,True
+1085,Don Don                   Melbourne,,-45.00,AUD,2026-03-11,2026-03-11,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Restaurants,,,True
+1086,Myki                      Melbourne,,-20.00,AUD,2026-03-12,2026-03-12,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,living,Public Transport,,,True
+1087,Victoria Hotel            Yarraville,,-90.00,AUD,2026-03-13,2026-03-13,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Bars & Pubs,,,True
+1088,Deft*synergy Ins Melb,,-600.00,AUD,2026-03-14,2026-03-14,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,living,Insurance,,,True
+1089,Increase account balance by 850000.0 AUD,,850000.00,AUD,2026-03-31,2026-03-31,xxxx,11 Example St,credit,payment,ANZ,Unknown,income,Uncategorised,,,False
+1090,PAYMENT                                 TO ASU UNION SANT   SANT376297,,-22.00,AUD,2026-01-07,2026-01-07,xxxx,ANZ One Offset Account,debit,payment,ANZ,Unknown,lifestyle,Uncategorised,,,True
+1091,TRANSFER FROM CCS PAYMENT 000350478250 CCS,,630.44,AUD,2026-01-29,2026-01-29,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Government Benefits,,,True
+1092,CREDIT INTEREST PAID,,1.25,AUD,2026-01-31,2026-01-31,xxxx,ANZ Online Saver,credit,payment,ANZ,Unknown,income,Interest Income,,,True
+1093,TRANSFER FROM ATO ATO009000022067563,,480.68,AUD,2026-02-03,2026-02-03,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Taxes,,,True
+1094,KPAY*F&B 3                HONGKONG 45.00  HKD 0.29 AUD,,-8.64,AUD,2026-02-06,2026-02-06,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Takeaway & Snacks,,,True
+1095,*AIRASIA-D7-INFLIGHT      KUALALUMPUR 71.00  MYR 0.90 AUD,,-26.75,AUD,2026-02-06,2026-02-06,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Travel/Holidays,,,True
+1096,BUNNINGS 380000          RICHMOND,,-64.00,AUD,2026-02-08,2026-02-08,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Home Renovation & Maintenance,,,True
+1097,CHEMIST WAREHOUSE        DARWIN,,-35.00,AUD,2026-02-09,2026-02-09,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Healthcare/Medical,,,False
+,CHARLIES OF DARWIN      DARWIN,,-60.00,AUD,2026-02-12,2026-02-12,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Restaurants,,,True
+1099,PAYMENT FROM ONEROOF SOLAR REFUND,,250.00,AUD,2026-02-25,2026-02-25,xxxx,ANZ One Offset Account,credit,payment,ANZ,Unknown,income,Transfer In,,,True
+1100,POS AUTHORISATION         CORNER CAFE              DARWIN CITY  AU,,-12.00,AUD,2026-03-27,,xxxx,ANZ Rewards Black Visa,debit,transfer_outgoing,ANZ,Unknown,lifestyle,Cafes & Coffee,,,True
+1101,KIDS CLINIC               DARWIN,,-150.00,AUD,2026-03-02,2026-03-04,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1102,PAYMENT FROM A FRIEND,,75.00,AUD,2026-03-03,2026-03-03,xxxx,ANZ Online Saver,credit,transfer_incoming,ANZ,Unknown,lifestyle,Credit Card Payments,,,True
+1103,Y & F VIC PTY LTD         CASUARINA,,-9.00,AUD,2026-03-11,2026-03-13,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,lifestyle,Takeaway & Snacks,,,True
+1104,SP SEA SHEPHERD POS       WILLIAMSTOWN,,-90.00,AUD,2026-02-15,2026-02-17,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Unknown,living,Clothing/Shoes,,,True
+1105,ALDI STORES               WEST FOOTSCRA,,-60.00,AUD,2026-03-12,2026-03-14,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Aldi,living,Groceries,,,True
+1106,COLES 0550                CAMPBELLFIELD,,-40.00,AUD,2026-03-13,2026-03-16,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Coles,living,Groceries,,,True
+1107,PLAYHQ* PLAYHQ.COM - B    MELBOURNE,,-50.00,AUD,2026-02-16,2026-02-18,xxxx,ANZ Rewards Black Visa,debit,payment,ANZ,Playhq,lifestyle,Entertainment/Recreation,,,True

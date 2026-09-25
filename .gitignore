@@ -1,0 +1,9 @@
+node_modules
+dist
+.vercel/
+.env*
+!.env.example
+data/
+*.csv
+!fixtures/*.csv
+.DS_Store

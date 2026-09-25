@@ -1,0 +1,157 @@
+{
+  "from": "2026-01-02",
+  "to": "2026-03-28",
+  "days": 86,
+  "used": 103,
+  "skipped": 4,
+  "totals": {
+    "income": 42212.37,
+    "otherIn": 475,
+    "spend": 14760.39,
+    "loanIn": 11400,
+    "loanInterest": 7200,
+    "tcmLoan": 10000,
+    "oneOff": 5000,
+    "incomeBySource": {
+      "Salary": 23400,
+      "TCM pay": 17700,
+      "Government": 630.44,
+      "Interest": 1.25,
+      "Tax refund": 480.68
+    },
+    "loanPrincipal": 4200
+  },
+  "oneOffs": [
+    {
+      "d": "2026-02-20",
+      "what": "Solar install (OneRoof)",
+      "amt": 5000,
+      "kind": "capital"
+    },
+    {
+      "d": "2026-03-05",
+      "what": "Loan to TCM (LandCruiser)",
+      "amt": 10000,
+      "kind": "loan"
+    }
+  ],
+  "months": [
+    {
+      "m": "2026-01",
+      "income": 14331.69,
+      "otherIn": 50,
+      "spend": 4957,
+      "byGroup": {
+        "Home & bills": 2710,
+        "Groceries": 720,
+        "Payments to people": 450,
+        "Kids & school": 35,
+        "Eating out & drinks": 120,
+        "Travel & holidays": 900,
+        "Other": 22
+      }
+    },
+    {
+      "m": "2026-02",
+      "income": 14180.68,
+      "otherIn": 300,
+      "spend": 4354.39,
+      "byGroup": {
+        "Home & bills": 2774,
+        "Groceries": 720,
+        "Payments to people": 450,
+        "Kids & school": 35,
+        "Eating out & drinks": 128.64,
+        "Health & fitness": 80,
+        "Travel & holidays": 26.75,
+        "Shopping": 90,
+        "Fun & hobbies": 50
+      }
+    },
+    {
+      "m": "2026-03",
+      "income": 13700,
+      "otherIn": 125,
+      "spend": 5449,
+      "byGroup": {
+        "Home & bills": 3310,
+        "Groceries": 820,
+        "Payments to people": 450,
+        "Kids & school": 35,
+        "Eating out & drinks": 264,
+        "Travel & holidays": 400,
+        "Car & transport": 20,
+        "Other": 150
+      }
+    }
+  ],
+  "spendLineCount": 45,
+  "victoriaTagged": [
+    {
+      "id": "1084",
+      "name": "1 Hotel Melbourne Melbourne",
+      "group": "Travel & holidays"
+    },
+    {
+      "id": "1085",
+      "name": "Don Don Melbourne",
+      "group": "Eating out & drinks"
+    },
+    {
+      "id": "1086",
+      "name": "Myki Melbourne",
+      "group": "Car & transport"
+    },
+    {
+      "id": "1087",
+      "name": "Victoria Hotel Yarraville",
+      "group": "Eating out & drinks"
+    },
+    {
+      "id": "1105",
+      "name": "Aldi",
+      "group": "Groceries"
+    },
+    {
+      "id": "1106",
+      "name": "Coles",
+      "group": "Groceries"
+    }
+  ],
+  "foreignTagged": [
+    {
+      "id": "1094",
+      "name": "Kpay*f&b 3 Hongkong 45.00 Hkd 0.29"
+    },
+    {
+      "id": "1095",
+      "name": "*Airasia-d7-inflight Kualalumpur 7"
+    }
+  ],
+  "flights": [
+    {
+      "id": "1083",
+      "date": "2026-01-20",
+      "amount": 900
+    }
+  ],
+  "buckets": {
+    "Other": 19,
+    "Food & drink": 22,
+    "Flights": 1,
+    "Accommodation": 1,
+    "Getting around": 1,
+    "Activities": 1
+  },
+  "skippedReasons": {
+    "excluded": 2,
+    "no transaction id": 1,
+    "pending": 1
+  },
+  "reviews": [
+    [
+      "1101",
+      "Check category: Frollo called this a card repayment"
+    ]
+  ]
+}

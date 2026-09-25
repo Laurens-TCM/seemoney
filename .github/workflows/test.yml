@@ -1,0 +1,28 @@
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for a lockfile
+        id: lock
+        run: |
+          if [ -f package-lock.json ]; then echo "present=true" >> "$GITHUB_OUTPUT";
+          else echo "present=false" >> "$GITHUB_OUTPUT"; echo "No package-lock.json yet; skipping tests until Phase 1."; fi
+      - uses: actions/setup-node@v4
+        if: steps.lock.outputs.present == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.lock.outputs.present == 'true'
+        run: npm ci
+      - if: steps.lock.outputs.present == 'true'
+        run: npm test -- --run
+      - if: steps.lock.outputs.present == 'true'
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-placeholder
