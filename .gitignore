@@ -7,3 +7,4 @@ data/
 *.csv
 !fixtures/*.csv
 .DS_Store
+supabase/.temp/

@@ -10,10 +10,12 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "test": "vitest",
-    "db:types": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/lib/database.types.ts",
-    "db:push": "npx supabase db push"
+    "db:types": "node scripts/supabase.mjs types",
+    "db:push": "node scripts/supabase.mjs migrate",
+    "db:status": "node scripts/supabase.mjs status"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.1",
     "papaparse": "^5.7.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"

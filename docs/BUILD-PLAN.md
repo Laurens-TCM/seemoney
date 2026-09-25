@@ -26,14 +26,14 @@ per phase, merged to `main` when CI is green.
 
 ## Phase 2 — Supabase
 - **You:** create a Supabase project (region Sydney). Copy `.env.example` to `.env.local` and fill
-  in URL, publishable (anon) key, secret (service-role) key, project ref, database password, and a
-  project-scoped access token (Account → Access Tokens: Project read, Database read and write).
+  in the project URL (no `/rest/v1/`), publishable (anon) key, secret (service-role) key, project
+  ref, and a project-scoped access token (Account → Access Tokens: Project read, Database read and write).
 - **You:** Auth → Sign In / Providers: turn off "Allow new users to sign up"; keep Email on with a
   minimum password length of 12.
 - **You:** Auth → Users → Create new user for each of you: email, a strong password (save it in
   your password manager), and "Auto confirm user".
-- `npx supabase link --project-ref $SUPABASE_PROJECT_REF`, `npx supabase db push`, then run
-  `supabase/seed-household.sql` with your real emails; `npm run db:types`.
+- `npm run db:push`, then create the household and add both users as members
+  (`supabase/seed-household.sql`, or the same statements via the API); `npm run db:types`.
 - **Accept:** RLS tests (using the service-role key locally to create a throwaway outsider
   user) show members can read and write; the outsider reads nothing and can't write; a
   `trip_overrides` row can't point at a trip in another household.

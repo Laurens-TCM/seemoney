@@ -43,8 +43,9 @@ docs/SPEC.md). No component library needed; keep dependencies few.
 - `npm run dev` — local app
 - `npm test` — Vitest (classifier, trip allocation, planner maths)
 - `npm run build` — production build
-- `npm run db:types` — regenerate Supabase types (Supabase CLI via npx; needs `SUPABASE_PROJECT_REF` and `SUPABASE_ACCESS_TOKEN`)
-- `npm run db:push` — apply `supabase/migrations`
+- `npm run db:push` — apply pending `supabase/migrations` (Management API via `scripts/supabase.mjs`; needs `SUPABASE_PROJECT_REF` and `SUPABASE_ACCESS_TOKEN`)
+- `npm run db:status` — list applied and pending migrations
+- `npm run db:types` — regenerate `src/lib/database.types.ts`
 
 ## Tooling
 The user works in VS Code, keeps code in a private GitHub repo, and deploys with Vercel

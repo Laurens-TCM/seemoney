@@ -45,13 +45,16 @@ See `supabase/migrations/0001_init.sql`. Key points:
 - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` — used by the app; also added to Vercel.
 - `SUPABASE_SERVICE_ROLE_KEY` — **local only**, no `VITE_` prefix so it can never reach the
   browser build. Used only by the RLS tests. Never add it to Vercel, GitHub secrets or CI.
-- `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` — for the Supabase CLI
-  (`link`, `db push`, `gen types`). Local only. The access token is project-scoped and expires;
-  generate a new one when the CLI says it's invalid.
+- `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` — for `scripts/supabase.mjs` (migrations and
+  types through the Supabase Management API). Local only. The token is project-scoped (Project
+  read, Database read and write) and expires; generate a new one when the script says so.
 
 ## Database changes
-Supabase CLI migrations in `supabase/migrations/`, applied with `npx supabase db push`.
-`npm run db:types` = `npx supabase gen types typescript --project-id $SUPABASE_PROJECT_REF > src/lib/database.types.ts`.
+Migrations live in `supabase/migrations/` (`<version>_<name>.sql`). `npm run db:push` applies
+pending ones through the Management API, each in one transaction with its record in
+`supabase_migrations.schema_migrations` (the table the Supabase CLI uses, so the CLI stays
+compatible). `npm run db:types` writes `src/lib/database.types.ts`. No database password or CLI
+link is needed.
 
 ## Installing on phones
 vite-plugin-pwa with manifest (name "See The Money", short name "See The Money", theme #16242B),
