@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket, ClassifyResult, IncomeSource, Kind, Line, LineOverride, Loc, SkipReason } from './classify';
 import type { Database } from './database.types';
 import type { DateRange } from './summary';
+import type { Trip, TripOverride } from './trips';
 
 export type Db = SupabaseClient<Database>;
 type LineRow = Database['public']['Tables']['lines']['Row'];
@@ -151,4 +152,34 @@ export async function saveOverride(db: Db, householdId: string, o: LineOverride)
 
 export async function clearOverride(db: Db, householdId: string, txId: string): Promise<void> {
   must(await db.from('line_overrides').delete().eq('household_id', householdId).eq('tx_id', txId));
+}
+
+export interface UserSettings { hideTrips: boolean | null; windowMonths: 3 | 6 | 12 }
+
+/** This person's own view choices (row-level security keeps them private to each of you). */
+export async function loadUserSettings(db: Db, householdId: string, userId: string): Promise<UserSettings> {
+  const rows = must(await db.from('user_settings').select('hide_trips, window_months').eq('household_id', householdId).eq('user_id', userId));
+  const r = rows[0];
+  return { hideTrips: r?.hide_trips ?? null, windowMonths: ((r?.window_months ?? 12) as UserSettings['windowMonths']) };
+}
+
+export async function saveUserSettings(db: Db, householdId: string, userId: string, s: UserSettings): Promise<void> {
+  must(await db.from('user_settings').upsert(
+    { household_id: householdId, user_id: userId, hide_trips: s.hideTrips, window_months: s.windowMonths },
+    { onConflict: 'household_id,user_id' },
+  ));
+}
+
+export interface StoredTrip extends Trip { name: string; kind: 'family' | 'holiday' | 'work'; rechargeToBusiness: boolean }
+
+export async function loadTrips(db: Db, householdId: string): Promise<{ trips: StoredTrip[]; overrides: TripOverride[] }> {
+  const trips = must(await db.from('trips').select('*').eq('household_id', householdId).order('start_date'));
+  const overrides = must(await db.from('trip_overrides').select('trip_id, tx_id, included').eq('household_id', householdId));
+  return {
+    trips: trips.map(t => ({
+      id: t.id, name: t.name, start: t.start_date, end: t.end_date, place: t.place as Trip['place'],
+      kind: t.kind as StoredTrip['kind'], rechargeToBusiness: !!t.recharge_to_business,
+    })),
+    overrides: overrides.map(o => ({ tripId: o.trip_id, txId: o.tx_id, included: o.included })),
+  };
 }
