@@ -3,6 +3,7 @@ import { useAuth } from './auth';
 import { Layout } from './Layout';
 import { Data } from './pages/Data';
 import { Overview } from './pages/Overview';
+import { Trips } from './pages/Trips';
 import { Placeholder } from './pages/Placeholder';
 import { SignIn } from './SignIn';
 
@@ -15,7 +16,7 @@ export function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Overview />} />
-          <Route path="trips" element={<Placeholder title="Trips" phase={5}>Melbourne visits and holidays, and what they cost.</Placeholder>} />
+          <Route path="trips" element={<Trips />} />
           <Route path="plan" element={<Placeholder title="Plan" phase={6}>Goals, the offset, and what spending needs to look like.</Placeholder>} />
           <Route path="data" element={<Data />} />
           <Route path="*" element={<Navigate to="/" replace />} />
