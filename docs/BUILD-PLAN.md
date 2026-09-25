@@ -68,9 +68,13 @@ per phase, merged to `main` when CI is green.
 
 ## Phase 7 — Ship
 - PWA manifest and icons, offline shell, empty and error states in the app's voice.
-- Add `vercel.json` with an SPA rewrite (`/(.*)` → `/index.html`).
-- **You:** Vercel → Add New → Project → import the GitHub repo (framework Vite, Node 22). Add
-  only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (Production and Preview). Deploy.
+- `vercel.json` (done in Phase 3) pins the Vite framework, `npm ci`, the `dist` output and the SPA
+  rewrite (`/(.*)` → `/index.html`).
+- **You (done early, in Phase 3):** Vercel project connected to the repo, with only
+  `VITE_SUPABASE_URL` (project URL, no `/rest/v1/`) and `VITE_SUPABASE_ANON_KEY` (publishable key)
+  for Production and Preview, **Sensitive off**. Vercel blanks the value of a `VITE_` variable
+  marked Sensitive, and a variable's type can't be changed later: remove and re-add it. Never add
+  the secret key, the access token or the project ref to Vercel.
 - **You:** Supabase → Auth → URL Configuration: Site URL = the Vercel production URL; add
   `https://*-<your-vercel-team>.vercel.app/**` as a redirect URL for preview deploys.
 - **You:** each of you signs in on your phone and adds See The Money to the home screen.
