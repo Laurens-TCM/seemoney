@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { classifyRows, missingColumns, REQUIRED_COLUMNS, type Kind } from '../src/lib/classify';
+import { applyOverrides, classifyRows, missingColumns, REQUIRED_COLUMNS, type Kind, type LineOverride } from '../src/lib/classify';
 import { parseFrolloCsv } from '../src/lib/csv';
 import { summarise } from '../src/lib/summary';
 import { byId, classifyFile, referenceShape } from './helpers';
@@ -59,6 +59,28 @@ describe('kinds (DATA-RULES test 2)', () => {
     const { rows } = parseFrolloCsv(readFileSync(SAMPLE, 'utf8'));
     const { lines: fixed } = classifyRows(rows, undefined, [{ txId: '1101', category: 'Healthcare/Medical' }]);
     expect(byId(fixed, '1101')).toMatchObject({ kind: 'spend', category: 'Healthcare/Medical', group: 'Health & fitness' });
+  });
+});
+
+describe('overrides on stored lines', () => {
+  const { rows } = parseFrolloCsv(readFileSync(SAMPLE, 'utf8'));
+  const { lines } = classifyRows(rows);
+  const overrides: LineOverride[] = [
+    { txId: '1003', kind: 'business_loan_repaid' }, // TCM pay that was really a loan repayment
+    { txId: '1101', category: 'Healthcare/Medical' }, // the mislabelled card line
+    { txId: '1004', kind: 'income' }, // "it's pay": confirms without changing anything
+    { txId: '1085', kind: 'internal' },
+  ];
+
+  it('gives the same lines as classifying the file with the overrides', () => {
+    expect(applyOverrides(lines, overrides)).toEqual(classifyRows(rows, undefined, overrides).lines);
+  });
+
+  it('answers the review question and leaves other lines alone', () => {
+    const after = applyOverrides(lines, overrides);
+    expect(byId(after, '1101')).toMatchObject({ review: null, category: 'Healthcare/Medical', group: 'Health & fitness' });
+    expect(byId(after, '1004')).toEqual(byId(lines, '1004'));
+    expect(after.filter((l, i) => l !== lines[i]).map(l => l.txId).sort()).toEqual(['1003', '1004', '1085', '1101']);
   });
 });
 

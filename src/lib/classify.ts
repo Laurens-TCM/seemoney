@@ -163,6 +163,38 @@ function kindOf(amt: number, descUpper: string, account: string, frolloCategory:
   return { kind: 'spend', category: remap(frolloCategory, descUpper, rules) }; // 15 (refund), 16
 }
 
+/**
+ * Applies saved manual changes to stored lines (which no longer have Frollo's raw description).
+ * An override also answers any review question on the line. A new category re-derives the group
+ * and trip bucket; the bucket reads the display name in place of the description, which still
+ * recognises airlines and stays.
+ */
+export function applyOverrides(lines: Line[], overrides: LineOverride[], rules: HouseholdRules = householdRules): Line[] {
+  if (!overrides.length) return lines;
+  const tags = tagger(rules);
+  const byId = new Map(overrides.map(o => [o.txId, o]));
+  return lines.map(l => {
+    const o = byId.get(l.txId);
+    if (!o || l.kind === 'excluded') return l;
+    const line: Line = { ...l, review: null };
+    if (o.kind) {
+      line.kind = o.kind;
+      if (o.kind !== 'income') line.incomeSource = null;
+    }
+    if (line.kind === 'spend') {
+      const category = (o.category ?? line.category) || 'Uncategorised';
+      if (category !== l.category || line.group === null) {
+        line.category = category;
+        line.group = groupOf(category);
+        line.bucket = tags.bucket(line.name.toUpperCase(), category, line.group);
+      }
+    } else {
+      Object.assign(line, { category: null, group: null, bucket: null, loc: null });
+    }
+    return line;
+  });
+}
+
 export function classifyRows(
   rows: FrolloRow[],
   rules: HouseholdRules = householdRules,
@@ -207,6 +239,7 @@ export function classifyRows(
     if (draft.name) line.name = titleCase(draft.name);
 
     const override = overrideById.get(txId);
+    if (override) line.review = null; // a manual decision answers any question about the line
     if (override?.kind) {
       line.kind = override.kind;
       if (line.kind !== 'income') line.incomeSource = null;

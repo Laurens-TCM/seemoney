@@ -2,7 +2,7 @@
 // app and the Node tests share them. Money crosses the wire as dollars (numeric(12,2)) and is
 // integer cents everywhere else.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Bucket, ClassifyResult, IncomeSource, Kind, Line, Loc, SkipReason } from './classify';
+import type { Bucket, ClassifyResult, IncomeSource, Kind, Line, LineOverride, Loc, SkipReason } from './classify';
 import type { Database } from './database.types';
 import type { DateRange } from './summary';
 
@@ -133,4 +133,22 @@ export async function importClassified(
   }
   const total = await countLines(db, householdId);
   return { importId: imp.id, saved: dates.length, newLines: total - before, total };
+}
+
+export async function loadOverrides(db: Db, householdId: string): Promise<LineOverride[]> {
+  const rows = must(await db.from('line_overrides').select('tx_id, kind, category').eq('household_id', householdId));
+  return rows.map(r => ({ txId: r.tx_id, kind: r.kind as Kind | null, category: r.category }));
+}
+
+/** Saves one manual decision about a line. It survives re-imports: lines and overrides are separate. */
+export async function saveOverride(db: Db, householdId: string, o: LineOverride): Promise<void> {
+  const { data } = await db.auth.getUser();
+  must(await db.from('line_overrides').upsert({
+    household_id: householdId, tx_id: o.txId, kind: o.kind ?? null, category: o.category ?? null,
+    updated_by: data.user?.id ?? null, updated_at: new Date().toISOString(),
+  }, { onConflict: 'household_id,tx_id' }));
+}
+
+export async function clearOverride(db: Db, householdId: string, txId: string): Promise<void> {
+  must(await db.from('line_overrides').delete().eq('household_id', householdId).eq('tx_id', txId));
 }

@@ -1,9 +1,10 @@
 // Phase 3 acceptance: importing into the real Supabase project (local only, throwaway household).
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { classifyRows } from '../src/lib/classify';
+import { applyOverrides, classifyRows } from '../src/lib/classify';
+import { linesToCheck } from '../src/lib/checks';
 import { parseFrolloCsv } from '../src/lib/csv';
-import { countLines, importClassified, loadImports, loadLines } from '../src/lib/store';
+import { clearOverride, countLines, importClassified, loadImports, loadLines, loadOverrides, saveOverride } from '../src/lib/store';
 import { missingRanges, summarise } from '../src/lib/summary';
 import { classifyFile, referenceShape } from './helpers';
 import { liveFixture, liveReady, type Client } from './live';
@@ -53,6 +54,26 @@ describe.skipIf(!liveReady)('importing an export', () => {
       lineCount: 103, skippedCount: 4, skippedReasons: { 'no transaction id': 1, pending: 1, excluded: 2 },
     });
   });
+
+  it('keeps manual answers through a re-import, and can undo them', async () => {
+    await saveOverride(db, home, { txId: '1101', category: 'Healthcare/Medical' });
+    await saveOverride(db, home, { txId: '1003', kind: 'business_loan_repaid' });
+    await importClassified(db, home, 'sample-frollo.csv', classifyFile(SAMPLE)); // re-import
+
+    const stored = await loadLines(db, home);
+    const overrides = await loadOverrides(db, home);
+    expect(overrides).toHaveLength(2);
+    const current = applyOverrides(stored, overrides);
+    expect(current.find(l => l.txId === '1101')).toMatchObject({ category: 'Healthcare/Medical', review: null });
+    expect(summarise(current).totals.businessRepaid).toBe(295_000);
+
+    const checks = linesToCheck(stored, current, overrides);
+    expect(checks.find(c => c.line.txId === '1101')?.answer).toMatchObject({ category: 'Healthcare/Medical' });
+
+    await clearOverride(db, home, '1101');
+    const after = applyOverrides(await loadLines(db, home), await loadOverrides(db, home));
+    expect(after.find(l => l.txId === '1101')).toMatchObject({ category: 'Uncategorised', review: expect.stringContaining('Check category') });
+  }, 60_000);
 
   it('shows the missing range when a later export leaves a gap', async () => {
     // A fresh household gets January, then March: February is missing.
