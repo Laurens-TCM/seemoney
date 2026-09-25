@@ -13,3 +13,6 @@ const asDate = (iso: string) => new Date(iso.length === 10 ? iso + 'T00:00:00' :
 export const day = (iso: string) => asDate(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 /** 25 Sep 2025 – 24 Sep 2026 */
 export const range = (r: { from: string; to: string }) => `${day(r.from)} – ${day(r.to)}`;
+
+/** Today in the phone's own time zone (you're both in Darwin), as YYYY-MM-DD. */
+export const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };

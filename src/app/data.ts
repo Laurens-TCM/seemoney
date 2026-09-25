@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { LIVE_TABLES, subscribeHousehold } from '../lib/realtime';
-import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadOffset, loadTargets, loadImports, loadLines, loadOverrides, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
+import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadOffset, loadTargets, loadImports, loadLines, loadOverrides, loadRegulars, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -67,3 +67,6 @@ export const useTargets = (householdId: string | undefined) =>
 
 export const useOffset = (householdId: string | undefined) =>
   useQuery({ queryKey: ['settings', householdId], queryFn: () => loadOffset(supabase, householdId!), enabled: !!householdId });
+
+export const useRegulars = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['regulars', householdId], queryFn: () => loadRegulars(supabase, householdId!), enabled: !!householdId });

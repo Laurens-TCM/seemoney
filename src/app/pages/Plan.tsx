@@ -12,11 +12,9 @@ import {
 import { supabase } from '../../lib/supabase';
 import { allocateTrips } from '../../lib/trips';
 import { useGoals, useHousehold, useImports, useLines, useOffset, useOverrides, useTargets, useTrips, useUserSettings } from '../data';
-import { day, money } from '../format';
+import { day, money, today } from '../format';
 import { useLoadState } from '../LoadState';
 
-/** Today in the phone's own time zone (you're both in Darwin), as YYYY-MM-DD. */
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const toCents = (v: string) => { const n = Number(v.replace(/[$,\s]/g, '')); return v.trim() === '' || !Number.isFinite(n) ? null : Math.round(n * 100); };
 const dollarsText = (c: number | null) => (c === null ? '' : String(Math.round(c) / 100));
 const monthLong = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });

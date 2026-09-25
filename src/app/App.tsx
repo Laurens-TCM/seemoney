@@ -4,6 +4,7 @@ import { Layout } from './Layout';
 import { Data } from './pages/Data';
 import { Overview } from './pages/Overview';
 import { Plan } from './pages/Plan';
+import { Regulars } from './pages/Regulars';
 import { Trips } from './pages/Trips';
 import { SignIn } from './SignIn';
 
@@ -17,6 +18,7 @@ export function App() {
         <Route element={<Layout />}>
           <Route index element={<Overview />} />
           <Route path="trips" element={<Trips />} />
+          <Route path="regulars" element={<Regulars />} />
           <Route path="plan" element={<Plan />} />
           <Route path="data" element={<Data />} />
           <Route path="*" element={<Navigate to="/" replace />} />

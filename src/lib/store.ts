@@ -6,6 +6,8 @@ import type { Bucket, ClassifyResult, IncomeSource, Kind, Line, LineOverride, Lo
 import type { Database } from './database.types';
 import type { DateRange } from './summary';
 import type { Trip, TripOverride } from './trips';
+import type { Cadence, RecurringSeries } from './recurring';
+import { seriesKeyOf, type RegularStatus, type StoredRegular } from './regulars';
 
 export type Db = SupabaseClient<Database>;
 type LineRow = Database['public']['Tables']['lines']['Row'];
@@ -132,6 +134,9 @@ export async function importClassified(
     await db.from('imports').delete().eq('id', imp.id);
     throw e;
   }
+  // Touch the imports row once every line is in: the other phone refetched lines when the row
+  // appeared (before the lines), and this change tells it to fetch them again.
+  must(await db.from('imports').update({ line_count: dates.length }).eq('id', imp.id));
   const total = await countLines(db, householdId);
   return { importId: imp.id, saved: dates.length, newLines: total - before, total };
 }
@@ -312,4 +317,52 @@ export async function saveOffset(db: Db, householdId: string, o: Offset): Promis
   must(await db.from('settings').upsert({
     household_id: householdId, offset_balance: o.balance == null ? null : toDollars(o.balance), offset_as_of: o.asOf,
   }, { onConflict: 'household_id' }));
+}
+
+const fromRegularRow = (r: Database['public']['Tables']['regulars']['Row']): StoredRegular => ({
+  id: r.id, seriesKey: r.series_key, txIds: r.tx_ids, status: r.status as RegularStatus, statusChangedAt: r.status_changed_at,
+  name: r.name, amount: r.amount == null ? null : toCents(r.amount), cadence: r.cadence as Cadence | null,
+  nextDue: r.next_due, group: r.grp, note: r.note,
+});
+
+export async function loadRegulars(db: Db, householdId: string): Promise<StoredRegular[]> {
+  return must(await db.from('regulars').select('*').eq('household_id', householdId).order('id')).map(fromRegularRow);
+}
+
+/**
+ * Saves a choice about a detected series. The row keeps every transaction id it has seen, so the
+ * choice still matches after a price change or once older payments leave the data.
+ */
+export async function setSeriesStatus(db: Db, householdId: string, series: RecurringSeries, stored: StoredRegular | null, status: RegularStatus): Promise<string> {
+  const values = {
+    series_key: seriesKeyOf(series), tx_ids: [...new Set([...(stored?.txIds ?? []), ...series.txIds])],
+    status, status_changed_at: new Date().toISOString(),
+  };
+  if (stored) {
+    must(await db.from('regulars').update(values).eq('household_id', householdId).eq('id', stored.id));
+    return stored.id;
+  }
+  return must<{ id: string }>(await db.from('regulars').insert({ household_id: householdId, ...values }).select('id').single()).id;
+}
+
+export interface ManualRegular { name: string; amount: number; cadence: Cadence; nextDue: string | null; group: string | null; note?: string | null }
+
+const manualRow = (m: ManualRegular) => ({
+  name: m.name, amount: toDollars(m.amount), cadence: m.cadence, next_due: m.nextDue, grp: m.group, note: m.note ?? null,
+});
+
+export async function addRegular(db: Db, householdId: string, m: ManualRegular): Promise<string> {
+  return must<{ id: string }>(await db.from('regulars').insert({ household_id: householdId, ...manualRow(m) }).select('id').single()).id;
+}
+
+export async function updateRegular(db: Db, householdId: string, id: string, m: ManualRegular): Promise<void> {
+  must(await db.from('regulars').update(manualRow(m)).eq('household_id', householdId).eq('id', id));
+}
+
+export async function setRegularStatus(db: Db, householdId: string, id: string, status: RegularStatus): Promise<void> {
+  must(await db.from('regulars').update({ status, status_changed_at: new Date().toISOString() }).eq('household_id', householdId).eq('id', id));
+}
+
+export async function deleteRegular(db: Db, householdId: string, id: string): Promise<void> {
+  must(await db.from('regulars').delete().eq('household_id', householdId).eq('id', id));
 }
