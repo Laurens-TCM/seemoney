@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- See The Money: rising bars (spending by month) with the income line. Source for the PNG icons. -->
+  <rect width="512" height="512" fill="#16242B"/>
+  <g fill="#E0A84A">
+    <rect x="118" y="262" width="52" height="130" rx="10"/>
+    <rect x="198" y="206" width="52" height="186" rx="10"/>
+    <rect x="278" y="236" width="52" height="156" rx="10"/>
+    <rect x="358" y="150" width="52" height="242" rx="10"/>
+  </g>
+  <path d="M104 196 L184 168 L264 180 L344 128 L424 110" fill="none" stroke="#4FB3A0" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

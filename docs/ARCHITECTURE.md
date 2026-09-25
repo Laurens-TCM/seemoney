@@ -58,7 +58,12 @@ link is needed.
 
 ## Installing on phones
 vite-plugin-pwa with manifest (name "See The Money", short name "See The Money", theme #16242B),
-icons 192/512, offline shell. On iPhone: Safari → Share → Add to Home Screen.
+icons 192/512 plus a maskable 512 and a 180 Apple touch icon (rendered from `public/icons/icon.svg`),
+and an offline app shell. The service worker precaches only the app itself and fonts; household
+data is never cached, so nothing financial is stored on the phone by it. Offline, pages say they're
+waiting for a connection, and a failed load shows "Try again" within about a second (the Supabase
+client's own retries are off; React Query retries once). On iPhone: Safari → Share → Add to Home
+Screen. On Android: Chrome → ⋮ → Install app.
 
 ## Workflow
 VS Code for editing, GitHub for the private repo and CI (GitHub Actions runs `npm test` and
