@@ -3,16 +3,28 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const clean = (v: unknown) => (typeof v === 'string' ? v.trim().replace(/^["']|["']$/g, '').trim() : '');
 
-/** Set when the build had no Supabase settings (e.g. a Vercel deploy without its env vars). */
-export const configError = !url || !key
-  ? 'This copy of See The Money was built without its Supabase settings (VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY).'
-  : null;
+/** The project origin from whatever was pasted: adds https://, drops /rest/v1/ and the like. */
+function projectOrigin(raw: string): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    return u.hostname.includes('.') ? u.origin : null;
+  } catch {
+    return null;
+  }
+}
 
-// Only the origin: pasting the REST address (…/rest/v1/) would break sign-in. The placeholder is
-// never used: main.tsx shows configError instead of the app.
-export const supabase = createClient<Database>(url ? new URL(url).origin : 'https://not-configured.invalid', key ?? 'none', {
+const url = projectOrigin(clean(import.meta.env.VITE_SUPABASE_URL));
+const key = clean(import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+/** Set when the build had no usable Supabase settings (e.g. a Vercel deploy without its env vars). */
+export const configError = !url
+  ? `This copy of See The Money was built without a usable VITE_SUPABASE_URL${import.meta.env.VITE_SUPABASE_URL ? ' (it should look like https://abcd1234.supabase.co)' : ''}.`
+  : !key ? 'This copy of See The Money was built without VITE_SUPABASE_ANON_KEY.' : null;
+
+// The placeholder is never used: main.tsx shows configError instead of the app.
+export const supabase = createClient<Database>(url ?? 'https://not-configured.invalid', key || 'none', {
   auth: { persistSession: true, autoRefreshToken: true },
 });
