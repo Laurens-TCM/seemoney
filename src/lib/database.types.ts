@@ -133,6 +133,7 @@ export type Database = {
           id: string
           line_count: number | null
           skipped_count: number | null
+          skipped_reasons: Json | null
           source_filename: string | null
           to_date: string
           uploaded_by: string | null
@@ -144,6 +145,7 @@ export type Database = {
           id?: string
           line_count?: number | null
           skipped_count?: number | null
+          skipped_reasons?: Json | null
           source_filename?: string | null
           to_date: string
           uploaded_by?: string | null
@@ -155,6 +157,7 @@ export type Database = {
           id?: string
           line_count?: number | null
           skipped_count?: number | null
+          skipped_reasons?: Json | null
           source_filename?: string | null
           to_date?: string
           uploaded_by?: string | null
@@ -223,6 +226,7 @@ export type Database = {
           loc: string | null
           name: string
           needs_review: boolean | null
+          review: string | null
           tx_id: string
         }
         Insert: {
@@ -240,6 +244,7 @@ export type Database = {
           loc?: string | null
           name: string
           needs_review?: boolean | null
+          review?: string | null
           tx_id: string
         }
         Update: {
@@ -257,6 +262,7 @@ export type Database = {
           loc?: string | null
           name?: string
           needs_review?: boolean | null
+          review?: string | null
           tx_id?: string
         }
         Relationships: [
