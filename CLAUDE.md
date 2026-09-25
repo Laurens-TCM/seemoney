@@ -14,7 +14,10 @@ and docs/DATA-RULES.md are newer and win; the prototype's embedded classifier is
 ## Non-negotiables
 - **Privacy.** Real exports live in `data/` (git-ignored). Never commit, log, paste into tests, or
   send real transaction data anywhere except the household's own Supabase project. CSVs are
-  parsed in the browser; the server receives only classified lines.
+  parsed in the browser; the server receives only classified lines. **Not yet decided (v2 Phase
+  12):** whether a monthly summary (aggregates, merchant names, people as "Person A/B") may be sent
+  to Anthropic for the AI review. Until the household says yes in so many words, nothing leaves
+  Supabase.
 - **Two users, one household.** No public sign-up. Row-level security on every table.
 - **Numbers are sacred.** Classification lives in one pure, fully tested module
   (`src/lib/classify.ts`). UI code never re-implements a rule.

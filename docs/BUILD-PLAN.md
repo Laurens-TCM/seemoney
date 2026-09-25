@@ -85,3 +85,43 @@ per phase, merged to `main` when CI is green.
 - Rules editor (move `household-rules.ts` into a table).
 - Monthly check-in view: last month vs targets, goals progress, a one-line summary to talk through.
 - Export Work trips and TCM loan movements as CSV for the accountant.
+
+# v2 — Back, Now, Ahead (see docs/V2-SPEC.md)
+
+## Phase 8 — Regulars
+- Port `reference/recurring.js` to `src/lib/recurring.ts`; tests against
+  `fixtures/expected-recurring.json` and the real-data counts.
+- `regulars` table (`0005_regulars.sql`), Regulars screen with Keep/Review/Cancel, Stopped,
+  manual add, "Not a regular", price-rise and New badges, due-day calendar.
+- **Accept:** fixture matches; real data finds the same series as `data/expected-real.json`.
+
+## Phase 9 — Events and colour
+- Apply `0006_events.sql` (from the reviewed draft): trips → events with types; automatic events on import;
+  "Label this?" for big one-off lines; colour tokens and the planned (hatched) style.
+- Overview toggle renamed "Leave events out of regular spending".
+- **Accept:** existing trips unchanged in totals; the solar install and TCM loan appear as
+  coloured events; contrast checked in both themes.
+
+## Phase 10 — Home (this month) and budgets
+- Budgets replace targets (start-from options, regulars shown as committed, roll-over).
+- Home: Safe to spend, pace bar, budget bars, Coming up (14 days), Heads up.
+- **Accept:** fixed-date tests for safe-to-spend and pace; Home fits one phone screen down to
+  Budgets.
+
+## Phase 11 — Plans, forecast and timeline
+- Plans replace goals (migration keeps set-asides), recurring plans, matching to actuals.
+- Offset forecast with buffer and lowest point.
+- Timeline: 12 months back to 12 ahead, filters, planned styling, year summary.
+- **Accept:** forecast tests pass; a planned trip that happens can be matched and turns solid.
+
+## Phase 12 — Signals, scorecard and the monthly review (see docs/RHYTHM-AND-REVIEW.md)
+- Signals engine (`src/lib/signals.ts`) with a fixture per rule; last-month scorecard with
+  budget / 3-month / same-month-last-year comparisons; "Expected" dismissals.
+- Sinking funds for lumpy regulars; plan trade-offs ("What would fund this sooner?").
+- Supabase Edge Function `monthly-review` + `pg_cron` schedule; `reviews`, `decisions`,
+  `signals` tables; Review screen with Apply buttons; Home card.
+- **You:** add `ANTHROPIC_API_KEY` as an Edge Function secret (`npx supabase secrets set`).
+  Never in `.env.local` with a `VITE_` prefix, never in Vercel.
+- **Accept:** packet contains no raw lines and no real names of people; a malformed reply falls
+  back to the signals view; "Review now" produces a review for the real data that the two of
+  you find accurate (this one is judged by you, not a test).

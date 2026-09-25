@@ -1,0 +1,57 @@
+-- v2 Phases 10–11 (DRAFT: rename to .sql when Phase 10 starts). Budgets replace targets; plans
+-- replace goals. Needs 0006_events. Safe to re-run.
+create table if not exists budgets (
+  household_id uuid not null references households on delete cascade,
+  grp text not null,
+  monthly_amount numeric(12,2),   -- null = use the "start from" figure
+  trimmable boolean,              -- null = use trimDefaults
+  rollover boolean not null default false,
+  primary key (household_id, grp)
+);
+insert into budgets (household_id, grp, monthly_amount, trimmable)
+select household_id, grp, monthly_target, trimmable from targets where grp is not null
+on conflict do nothing;
+
+create table if not exists plans (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references households on delete cascade,
+  name text not null default '',
+  type text not null default 'big' check (type in ('trip','big','loan','income','bill')),
+  start_date date, end_date date,
+  amount numeric(12,2),
+  direction text not null default 'out' check (direction in ('out','in')),
+  funding text not null default 'save' check (funding in ('save','offset','income')),
+  saved numeric(12,2) not null default 0,
+  repeat_every_months int check (repeat_every_months is null or repeat_every_months between 1 and 24),
+  status text not null default 'planned' check (status in ('planned','done','skipped')),
+  matched_event_id uuid,
+  notes text,
+  sort int not null default 0,
+  migrated_goal_id uuid unique,   -- the goal a plan came from, so re-running doesn't copy it twice
+  unique (id, household_id),
+  foreign key (matched_event_id, household_id) references events (id, household_id) on delete set null (matched_event_id)
+);
+
+-- Each goal becomes a "save up first" plan dated its target month, keeping its set-aside. The v1
+-- "Trips, next 12 months" goal becomes a recurring trip plan; travel-looking names become trips.
+insert into plans (household_id, name, type, start_date, end_date, amount, funding, saved, sort, repeat_every_months, migrated_goal_id)
+select g.household_id, g.name,
+       case when g.name ~* '(trip|holiday|travel|europe|melbourne)' then 'trip' else 'big' end,
+       g.target_month, g.target_month, g.amount, 'save', coalesce(g.saved, 0), coalesce(g.sort, 0),
+       case when g.name ~* '^trips, next 12 months' then 12 end,
+       g.id
+from goals g
+on conflict (migrated_goal_id) do nothing;
+
+alter table settings add column if not exists offset_buffer numeric(12,2) default 10000;
+
+do $$ declare t text; begin
+  foreach t in array array['plans','budgets'] loop
+    execute format('alter table %I enable row level security', t);
+    execute format('drop policy if exists member_all on %I', t);
+    execute format('create policy member_all on %I for all using (is_member(household_id)) with check (is_member(household_id))', t);
+    begin execute format('alter publication supabase_realtime add table %I', t);
+    exception when duplicate_object then null; end;
+  end loop;
+end $$;
+-- Later cleanup, once no deployed app reads them: drop table goals; drop table targets;
