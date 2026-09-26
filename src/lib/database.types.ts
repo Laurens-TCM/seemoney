@@ -282,6 +282,62 @@ export type Database = {
           },
         ]
       }
+      regulars: {
+        Row: {
+          amount: number | null
+          cadence: string | null
+          grp: string | null
+          household_id: string
+          id: string
+          name: string | null
+          next_due: string | null
+          note: string | null
+          series_key: string | null
+          status: string
+          status_changed_at: string | null
+          tx_ids: string[]
+          updated_by: string | null
+        }
+        Insert: {
+          amount?: number | null
+          cadence?: string | null
+          grp?: string | null
+          household_id: string
+          id?: string
+          name?: string | null
+          next_due?: string | null
+          note?: string | null
+          series_key?: string | null
+          status?: string
+          status_changed_at?: string | null
+          tx_ids?: string[]
+          updated_by?: string | null
+        }
+        Update: {
+          amount?: number | null
+          cadence?: string | null
+          grp?: string | null
+          household_id?: string
+          id?: string
+          name?: string | null
+          next_due?: string | null
+          note?: string | null
+          series_key?: string | null
+          status?: string
+          status_changed_at?: string | null
+          tx_ids?: string[]
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulars_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settings: {
         Row: {
           business_owed_as_of: string | null

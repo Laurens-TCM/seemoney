@@ -48,7 +48,7 @@ a { color: inherit; }
 .brand { font-weight: 800; font-size: 1.125rem; letter-spacing: -.01em; }
 main { padding: 1rem; max-width: 760px; width: 100%; margin: 0 auto; }
 .tabs {
-  display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface);
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); background: var(--surface);
   border-top: 1px solid var(--line); position: sticky; bottom: 0;
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -224,3 +224,27 @@ input[type='date'] { min-width: 0; max-width: 100%; }
 input.amount-cell { width: 6.5rem; text-align: right; padding: .375rem .5rem; }
 .table.targets input[type='checkbox'] { width: 1.125rem; height: 1.125rem; accent-color: var(--chart-trips); }
 .offline { margin-bottom: 1rem; }
+
+/* Regulars */
+.lead { font-size: 1.125rem; }
+.list.regulars li { display: block; }
+.regular-head { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.regular-head .amt { font-weight: 800; white-space: nowrap; }
+.regular-actions { margin-top: .5rem; }
+.badge {
+  display: inline-block; margin-left: .375rem; padding: .0625rem .5rem; border-radius: 999px;
+  font-size: .75rem; font-weight: 600; background: var(--soft); color: var(--muted); vertical-align: .125rem;
+}
+.badge.up { color: var(--warning); }
+.badge.new { color: var(--income); }
+.calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; text-align: center; }
+.calendar .weekday { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.calendar .day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 2.5rem;
+  border-radius: 8px; font-size: .875rem; color: var(--muted); padding: 0; border: 1px solid transparent; background: none;
+}
+.calendar .day.due { background: var(--soft); color: var(--ink); font-weight: 700; border-color: var(--line); }
+.calendar .day.due::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--chart-spend); margin-top: 2px; }
+.calendar .day.due .dots { font-size: .625rem; line-height: 1; color: var(--muted); }
+.calendar .day.due[aria-pressed='true'] { background: var(--ink); color: var(--surface); }
+.calendar .day.today { outline: 2px solid var(--goals); outline-offset: -2px; }
