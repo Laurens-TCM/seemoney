@@ -5,7 +5,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Bucket, ClassifyResult, IncomeSource, Kind, Line, LineOverride, Loc, SkipReason } from './classify';
 import type { Database } from './database.types';
 import type { DateRange } from './summary';
-import type { Trip, TripOverride } from './trips';
+import { BIG_PURCHASE_DEFAULT, type EventOverride, type EventType, type StoredEvent, type TripKind } from './events';
+import type { TripPlace } from './trips';
 import type { Cadence, RecurringSeries } from './recurring';
 import { seriesKeyOf, type RegularStatus, type StoredRegular } from './regulars';
 
@@ -159,33 +160,33 @@ export async function clearOverride(db: Db, householdId: string, txId: string): 
   must(await db.from('line_overrides').delete().eq('household_id', householdId).eq('tx_id', txId));
 }
 
-export interface UserSettings { hideTrips: boolean | null; windowMonths: 3 | 6 | 12 }
+/** hideEvents is stored in the v1 column hide_trips. */
+export interface UserSettings { hideEvents: boolean | null; windowMonths: 3 | 6 | 12 }
 
 /** This person's own view choices (row-level security keeps them private to each of you). */
 export async function loadUserSettings(db: Db, householdId: string, userId: string): Promise<UserSettings> {
   const rows = must(await db.from('user_settings').select('hide_trips, window_months').eq('household_id', householdId).eq('user_id', userId));
   const r = rows[0];
-  return { hideTrips: r?.hide_trips ?? null, windowMonths: ((r?.window_months ?? 12) as UserSettings['windowMonths']) };
+  return { hideEvents: r?.hide_trips ?? null, windowMonths: ((r?.window_months ?? 12) as UserSettings['windowMonths']) };
 }
 
 export async function saveUserSettings(db: Db, householdId: string, userId: string, s: UserSettings): Promise<void> {
   must(await db.from('user_settings').upsert(
-    { household_id: householdId, user_id: userId, hide_trips: s.hideTrips, window_months: s.windowMonths },
+    { household_id: householdId, user_id: userId, hide_trips: s.hideEvents, window_months: s.windowMonths },
     { onConflict: 'household_id,user_id' },
   ));
 }
 
-export interface StoredTrip extends Trip { name: string; kind: 'family' | 'holiday' | 'work'; rechargeToBusiness: boolean }
-
-export async function loadTrips(db: Db, householdId: string): Promise<{ trips: StoredTrip[]; overrides: TripOverride[] }> {
-  const trips = must(await db.from('trips').select('*').eq('household_id', householdId).order('start_date'));
-  const overrides = must(await db.from('trip_overrides').select('trip_id, tx_id, included').eq('household_id', householdId));
+/** Events (trips, labelled purchases) and the lines ticked or unticked on them. */
+export async function loadEvents(db: Db, householdId: string): Promise<{ events: StoredEvent[]; overrides: EventOverride[] }> {
+  const events = must(await db.from('events').select('*').eq('household_id', householdId).order('start_date'));
+  const overrides = must(await db.from('event_overrides').select('event_id, tx_id, included').eq('household_id', householdId));
   return {
-    trips: trips.map(t => ({
-      id: t.id, name: t.name, start: t.start_date, end: t.end_date, place: t.place as Trip['place'],
-      kind: t.kind as StoredTrip['kind'], rechargeToBusiness: !!t.recharge_to_business,
+    events: events.map(e => ({
+      id: e.id, type: e.type as EventType, name: e.name, start: e.start_date, end: e.end_date,
+      kind: e.kind as TripKind | null, place: e.place as TripPlace | null, rechargeToBusiness: !!e.recharge_to_business,
     })),
-    overrides: overrides.map(o => ({ tripId: o.trip_id, txId: o.tx_id, included: o.included })),
+    overrides: overrides.map(o => ({ eventId: o.event_id, txId: o.tx_id, included: o.included })),
   };
 }
 
@@ -205,36 +206,74 @@ export async function saveBusinessOwed(db: Db, householdId: string, value: { amo
   }, { onConflict: 'household_id' }));
 }
 
-export interface TripInput { name: string; start: string; end: string; kind: StoredTrip['kind']; place: Trip['place']; rechargeToBusiness?: boolean }
+/** A new or changed event. Trips need kind and place; other types leave them out. */
+export interface EventInput {
+  type: EventType; name: string; start: string; end: string;
+  kind?: TripKind | null; place?: TripPlace | null; rechargeToBusiness?: boolean;
+}
 
-export async function createTrip(db: Db, householdId: string, t: TripInput): Promise<string> {
+const eventRow = (e: EventInput) => {
+  const trip = e.type === 'trip';
+  return {
+    type: e.type, name: e.name, start_date: e.start, end_date: e.end,
+    kind: trip ? e.kind ?? 'family' : null, place: trip ? e.place ?? 'melbourne' : null,
+    recharge_to_business: trip && e.kind === 'work' && (e.rechargeToBusiness ?? false),
+  };
+};
+
+export async function createEvent(db: Db, householdId: string, e: EventInput): Promise<string> {
   const { data: user } = await db.auth.getUser();
-  const row = must<{ id: string }>(await db.from('trips').insert({
-    household_id: householdId, name: t.name, start_date: t.start, end_date: t.end, kind: t.kind, place: t.place,
-    recharge_to_business: t.rechargeToBusiness ?? false, created_by: user.user?.id ?? null,
+  const row = must<{ id: string }>(await db.from('events').insert({
+    household_id: householdId, ...eventRow(e), created_by: user.user?.id ?? null,
   }).select('id').single());
   return row.id;
 }
 
-export async function updateTrip(db: Db, householdId: string, id: string, t: TripInput): Promise<void> {
-  must(await db.from('trips').update({
-    name: t.name, start_date: t.start, end_date: t.end, kind: t.kind, place: t.place,
-    recharge_to_business: t.kind === 'work' && (t.rechargeToBusiness ?? false),
-  }).eq('household_id', householdId).eq('id', id));
+export async function updateEvent(db: Db, householdId: string, id: string, e: EventInput): Promise<void> {
+  must(await db.from('events').update(eventRow(e)).eq('household_id', householdId).eq('id', id));
 }
 
-/** Deleting a trip also removes its ticks and unticks (on delete cascade). */
-export async function deleteTrip(db: Db, householdId: string, id: string): Promise<void> {
-  must(await db.from('trips').delete().eq('household_id', householdId).eq('id', id));
+/** Deleting an event also removes its ticks and unticks (on delete cascade). */
+export async function deleteEvent(db: Db, householdId: string, id: string): Promise<void> {
+  must(await db.from('events').delete().eq('household_id', householdId).eq('id', id));
 }
 
-/** Tick (true) or untick (false) a line on a trip; null goes back to the automatic choice. */
-export async function setTripTick(db: Db, householdId: string, tripId: string, txId: string, included: boolean | null): Promise<void> {
+/** Tick (true) or untick (false) a line on an event; null goes back to the automatic choice. */
+export async function setEventTick(db: Db, householdId: string, eventId: string, txId: string, included: boolean | null): Promise<void> {
   if (included === null) {
-    must(await db.from('trip_overrides').delete().eq('household_id', householdId).eq('trip_id', tripId).eq('tx_id', txId));
+    must(await db.from('event_overrides').delete().eq('household_id', householdId).eq('event_id', eventId).eq('tx_id', txId));
   } else {
-    must(await db.from('trip_overrides').upsert({ household_id: householdId, trip_id: tripId, tx_id: txId, included }, { onConflict: 'trip_id,tx_id' }));
+    must(await db.from('event_overrides').upsert({ household_id: householdId, event_id: eventId, tx_id: txId, included }, { onConflict: 'event_id,tx_id' }));
   }
+}
+
+/** "Label this?": makes an event holding just this line. */
+export async function labelLine(db: Db, householdId: string, line: Pick<Line, 'txId' | 'date'>, e: { type: EventType; name: string }): Promise<string> {
+  const id = await createEvent(db, householdId, { ...e, start: line.date, end: line.date });
+  await setEventTick(db, householdId, id, line.txId, true);
+  return id;
+}
+
+export async function loadDismissedEvents(db: Db, householdId: string): Promise<Set<string>> {
+  return new Set(must(await db.from('dismissed_events').select('tx_id').eq('household_id', householdId)).map(r => r.tx_id));
+}
+
+export async function dismissLabel(db: Db, householdId: string, txId: string): Promise<void> {
+  must(await db.from('dismissed_events').upsert({ household_id: householdId, tx_id: txId }, { onConflict: 'household_id,tx_id' }));
+}
+
+export async function undismissLabel(db: Db, householdId: string, txId: string): Promise<void> {
+  must(await db.from('dismissed_events').delete().eq('household_id', householdId).eq('tx_id', txId));
+}
+
+/** Purchases at or above this get a "Label this?" prompt (cents). */
+export async function loadBigPurchaseThreshold(db: Db, householdId: string): Promise<number> {
+  const r = must(await db.from('settings').select('big_purchase_threshold').eq('household_id', householdId))[0];
+  return r?.big_purchase_threshold == null ? BIG_PURCHASE_DEFAULT : toCents(r.big_purchase_threshold);
+}
+
+export async function saveBigPurchaseThreshold(db: Db, householdId: string, cents: number): Promise<void> {
+  must(await db.from('settings').upsert({ household_id: householdId, big_purchase_threshold: toDollars(cents) }, { onConflict: 'household_id' }));
 }
 
 export async function loadDismissed(db: Db, householdId: string): Promise<DateRange[]> {

@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { LIVE_TABLES, subscribeHousehold } from '../lib/realtime';
-import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadOffset, loadTargets, loadImports, loadLines, loadOverrides, loadRegulars, loadTrips, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
+import { loadBusinessOwed, loadDismissed, loadGoals, loadHousehold, loadOffset, loadTargets, loadImports, loadLines, loadOverrides, loadRegulars, loadEvents, loadDismissedEvents, loadBigPurchaseThreshold, loadUserSettings, saveUserSettings, type UserSettings } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './auth';
 
@@ -23,8 +23,14 @@ export const useLines = (householdId: string | undefined) =>
 export const useOverrides = (householdId: string | undefined) =>
   useQuery({ queryKey: ['overrides', householdId], queryFn: () => loadOverrides(supabase, householdId!), enabled: !!householdId });
 
-export const useTrips = (householdId: string | undefined) =>
-  useQuery({ queryKey: ['trips', householdId], queryFn: () => loadTrips(supabase, householdId!), enabled: !!householdId });
+export const useEvents = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['events', householdId], queryFn: () => loadEvents(supabase, householdId!), enabled: !!householdId });
+
+export const useDismissedEvents = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['dismissed-events', householdId], queryFn: () => loadDismissedEvents(supabase, householdId!), enabled: !!householdId });
+
+export const useBigPurchaseThreshold = (householdId: string | undefined) =>
+  useQuery({ queryKey: ['big-purchase', householdId], queryFn: () => loadBigPurchaseThreshold(supabase, householdId!), enabled: !!householdId });
 
 export function useUserSettings(householdId: string | undefined) {
   const { session } = useAuth();
@@ -38,7 +44,7 @@ export function useUserSettings(householdId: string | undefined) {
     mutationFn: (s: UserSettings) => saveUserSettings(supabase, householdId!, userId!, s),
     onSuccess: (_r, s) => queryClient.setQueryData(key, s),
   });
-  const settings = chosen ?? q.data ?? { hideTrips: null, windowMonths: 12 as const };
+  const settings = chosen ?? q.data ?? { hideEvents: null, windowMonths: 12 as const };
   return { settings, save: (s: UserSettings) => { setChosen(s); save.mutate(s); }, saveError: save.error };
 }
 

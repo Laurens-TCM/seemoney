@@ -1,7 +1,7 @@
 // Phase 5 acceptance: a tick on one phone reaches the other within a few seconds (local only).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { subscribeHousehold } from '../src/lib/realtime';
-import { createTrip, setTripTick } from '../src/lib/store';
+import { createEvent, setEventTick } from '../src/lib/store';
 import { liveFixture, liveReady, type Client } from './live';
 
 it(liveReady ? 'Realtime test ran against the Supabase project' : 'Realtime test skipped: no Supabase keys in .env.local', () => {});
@@ -37,12 +37,12 @@ describe.skipIf(!liveReady)('live updates between two phones', () => {
     await Promise.all([a.subscribed, spy.subscribed]);
     // Database changes start flowing a moment after SUBSCRIBED; the app subscribes once when it opens.
     await new Promise(r => setTimeout(r, 1500));
-    const tripId = await createTrip(phoneB, home, { name: 'Melbourne', start: '2026-03-01', end: '2026-03-05', kind: 'family', place: 'melbourne' });
+    const tripId = await createEvent(phoneB, home, { type: 'trip', name: 'Melbourne', start: '2026-03-01', end: '2026-03-05', kind: 'family', place: 'melbourne' });
     const started = Date.now();
-    await setTripTick(phoneB, home, tripId, 'tx-1', true);
-    expect(await waitFor(() => a.seen.includes('trip_overrides'), 5000)).toBe(true);
+    await setEventTick(phoneB, home, tripId, 'tx-1', true);
+    expect(await waitFor(() => a.seen.includes('event_overrides'), 5000)).toBe(true);
     console.log(`Phone A heard about the tick in ${Date.now() - started} ms`);
-    expect(a.seen).toContain('trips');
+    expect(a.seen).toContain('events');
     await new Promise(r => setTimeout(r, 1500));
     expect(spy.seen).toEqual([]); // row-level security applies to live events too
     a.stop(); spy.stop();

@@ -248,3 +248,30 @@ input.amount-cell { width: 6.5rem; text-align: right; padding: .375rem .5rem; }
 .calendar .day.due .dots { font-size: .625rem; line-height: 1; color: var(--muted); }
 .calendar .day.due[aria-pressed='true'] { background: var(--ink); color: var(--surface); }
 .calendar .day.today { outline: 2px solid var(--goals); outline-offset: -2px; }
+
+/* Events: one colour per type (docs/V2-SPEC.md §1), checked with the dataviz validator against the
+   surface in both themes: 3:1 contrast, and colour-blind and normal-vision separation for every
+   pair of types and for the chart stack. Every chip also has an icon and text. */
+:root { --ev-trip: #A86A12; --ev-big: #824097; --ev-loan: #2997EA; --ev-income: #0E8570; --ev-bill: #DC57AA; }
+@media (prefers-color-scheme: dark) {
+  :root { --ev-trip: #BF8726; --ev-big: #A06AF1; --ev-loan: #056EB8; --ev-income: #27A88C; --ev-bill: #BA3782; }
+}
+.ev-trip { --ev: var(--ev-trip); } .ev-big { --ev: var(--ev-big); } .ev-loan { --ev: var(--ev-loan); }
+.ev-income { --ev: var(--ev-income); } .ev-bill { --ev: var(--ev-bill); }
+.ev-chip {
+  display: inline-flex; align-items: center; gap: .25rem; padding: .0625rem .5rem .0625rem .375rem; border-radius: 999px;
+  font-size: .75rem; font-weight: 600; color: var(--ink); border: 1.5px solid var(--ev);
+  background: color-mix(in srgb, var(--ev) 14%, var(--surface));
+  vertical-align: .125rem; white-space: nowrap;
+}
+/* Text stays ink for contrast; the icon and outline carry the colour. Planned: dashed outline
+   and a light diagonal hatch instead of the tint. */
+.ev-chip .ev-icon { color: var(--ev); }
+.ev-chip.planned {
+  border-style: dashed;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ev) 22%, transparent) 0 3px, transparent 3px 7px);
+}
+.ev-icon { flex: none; }
+.ev-dot { display: inline-flex; color: var(--ev); vertical-align: -.125rem; }
+.small-button { padding: .375rem .625rem; font-size: .875rem; display: inline-flex; align-items: center; gap: .375rem; }
+.amt.in { color: var(--income); }

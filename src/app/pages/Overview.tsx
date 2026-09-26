@@ -8,8 +8,10 @@ import { businessBalance, buildOverview, type GroupRow, type Overview as Overvie
 import { saveBusinessOwed } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
 import type { WindowMonths } from '../../lib/summary';
-import { allocateTrips } from '../../lib/trips';
-import { useBusinessOwed, useHousehold, useImports, useLines, useOverrides, useTrips, useUserSettings } from '../data';
+import { householdRules } from '../../config/household-rules';
+import { allocateEvents } from '../../lib/events';
+import { useBusinessOwed, useEvents, useHousehold, useImports, useLines, useOverrides, useUserSettings } from '../data';
+import { EventChip } from '../EventChip';
 import { day, money, plural, range } from '../format';
 import { useLoadState } from '../LoadState';
 import { MonthChart } from '../MonthChart';
@@ -19,27 +21,27 @@ const WINDOWS: WindowMonths[] = [12, 6, 3];
 export function Overview() {
   const { household } = useHousehold();
   const hid = household!.id;
-  const lines = useLines(hid), imports = useImports(hid), overrides = useOverrides(hid), trips = useTrips(hid);
+  const lines = useLines(hid), imports = useImports(hid), overrides = useOverrides(hid), events = useEvents(hid);
   const { settings, save } = useUserSettings(hid);
-  const hasTrips = (trips.data?.trips.length ?? 0) > 0;
-  // Until someone chooses, trips are left out whenever at least one exists.
-  const hideTrips = settings.hideTrips ?? hasTrips;
+  const hasEvents = (events.data?.events.length ?? 0) > 0;
+  // Until someone chooses, events are left out whenever at least one exists.
+  const hideEvents = settings.hideEvents ?? hasEvents;
 
   const current = useMemo(
     () => (lines.data && overrides.data ? applyOverrides(lines.data, overrides.data) : null),
     [lines.data, overrides.data],
   );
   const o = useMemo(() => {
-    if (!current || !imports.data || !trips.data) return null;
-    const alloc = trips.data.trips.length ? allocateTrips(current, trips.data.trips, trips.data.overrides) : null;
-    return buildOverview({ lines: current, imports: imports.data.map(i => i.range), windowMonths: settings.windowMonths, hideTrips, trips: alloc });
-  }, [current, imports.data, trips.data, settings.windowMonths, hideTrips]);
+    if (!current || !imports.data || !events.data) return null;
+    const alloc = events.data.events.length ? allocateEvents(current, events.data.events, events.data.overrides) : null;
+    return buildOverview({ lines: current, imports: imports.data.map(i => i.range), windowMonths: settings.windowMonths, hideEvents, events: alloc });
+  }, [current, imports.data, events.data, settings.windowMonths, hideEvents]);
   const unanswered = useMemo(
     () => (lines.data && current && overrides.data ? linesToCheck(lines.data, current, overrides.data).filter(c => !c.answer).length : 0),
     [lines.data, current, overrides.data],
   );
 
-  const wait = useLoadState([lines, imports, overrides, trips], 'your figures');
+  const wait = useLoadState([lines, imports, overrides, events], 'your figures');
   if (wait) return <><h1>Overview</h1>{wait}</>;
   if (!o) {
     return (
@@ -71,16 +73,16 @@ export function Overview() {
       )}
 
       <Headline o={o} label={label} />
-      {hasTrips && (
+      {hasEvents && (
         <label className="toggle panel">
-          <input type="checkbox" checked={hideTrips} onChange={e => save({ ...settings, hideTrips: e.target.checked })} />
-          <span>Leave trips out of regular spending</span>
+          <input type="checkbox" checked={hideEvents} onChange={e => save({ ...settings, hideEvents: e.target.checked })} />
+          <span>Leave events out of regular spending</span>
         </label>
       )}
 
       <section className="panel stack" aria-labelledby="months-heading">
         <h2 id="months-heading">Month by month</h2>
-        <MonthChart bars={o.bars} showTrips={hideTrips && o.pm.trips > 0} />
+        <MonthChart bars={o.bars} showEvents={hideEvents && o.pm.events > 0} />
       </section>
 
       <WhereItGoes o={o} />
@@ -91,7 +93,7 @@ export function Overview() {
 
 function Headline({ o, label }: { o: OverviewData; label: string }) {
   const gap = o.pm.regular - o.pm.income;
-  const regular = o.hideTrips ? ' on regular living' : '';
+  const regular = o.hideEvents ? ' on regular living' : '';
   return (
     <section className="panel headline" aria-label="Summary">
       <p className="lead">
@@ -99,10 +101,10 @@ function Headline({ o, label }: { o: OverviewData; label: string }) {
         earned <strong className="in">{money(o.pm.income)}</strong>.
       </p>
       <p className="muted" style={{ margin: 0 }}>
-        {o.hideTrips && <>Trips added another {money(o.pm.trips)} a month on top. </>}
+        {o.hideEvents && <>Events added another {money(o.pm.events)} a month on top. </>}
         {gap > 0
-          ? <>{o.hideTrips ? 'Regular spending' : 'Spending'} is {money(gap)} a month more than pay income, before {money(o.pm.principal)} a month of extra loan principal.</>
-          : <>That leaves {money(-gap)} a month after {o.hideTrips ? 'regular ' : ''}spending, before {money(o.pm.principal)} a month of extra loan principal.</>}
+          ? <>{o.hideEvents ? 'Regular spending' : 'Spending'} is {money(gap)} a month more than pay income, before {money(o.pm.principal)} a month of extra loan principal.</>
+          : <>That leaves {money(-gap)} a month after {o.hideEvents ? 'regular ' : ''}spending, before {money(o.pm.principal)} a month of extra loan principal.</>}
       </p>
     </section>
   );
@@ -114,7 +116,7 @@ function WhereItGoes({ o }: { o: OverviewData }) {
   return (
     <section className="panel stack" aria-labelledby="where-heading">
       <h2 id="where-heading">Where it goes</h2>
-      <p className="muted small" style={{ margin: 0 }}>Average per month{o.hideTrips ? ', with trips left out' : ''}. Tap a group to see its categories and who got paid.</p>
+      <p className="muted small" style={{ margin: 0 }}>Average per month{o.hideEvents ? ', with events left out' : ''}. Tap a group to see its categories and who got paid.</p>
       <ul className="groups">
         {o.groups.map(g => (
           <li key={g.group}>
@@ -123,7 +125,7 @@ function WhereItGoes({ o }: { o: OverviewData }) {
               <span className="amt">{money(g.perMonth)}</span>
               <span className="track" aria-hidden="true"><span style={{ width: `${Math.max(0, (g.perMonth / max) * 100).toFixed(1)}%` }} /></span>
             </button>
-            {open === g.group && <GroupDetail g={g} tripsIncluded={o.hideTrips} />}
+            {open === g.group && <GroupDetail g={g} eventsIncluded={o.hideEvents} />}
           </li>
         ))}
       </ul>
@@ -131,7 +133,7 @@ function WhereItGoes({ o }: { o: OverviewData }) {
   );
 }
 
-function GroupDetail({ g, tripsIncluded }: { g: GroupRow; tripsIncluded: boolean }) {
+function GroupDetail({ g, eventsIncluded }: { g: GroupRow; eventsIncluded: boolean }) {
   return (
     <div className="group-detail small">
       {g.categories.length > 1 && (
@@ -142,7 +144,7 @@ function GroupDetail({ g, tripsIncluded }: { g: GroupRow; tripsIncluded: boolean
           </tbody></table>
         </>
       )}
-      <h3>Biggest payees, whole period{tripsIncluded ? ', trips included' : ''}</h3>
+      <h3>Biggest payees, whole period{eventsIncluded ? ', events included' : ''}</h3>
       <table className="table"><tbody>
         {g.payees.map(p => <tr key={p.name}><th scope="row">{p.name} <span className="muted">× {p.count}</span></th><td>{money(p.total)}</td></tr>)}
       </tbody></table>
@@ -159,7 +161,7 @@ function NotCounted({ o, lines, householdId, dataStart }: { o: OverviewData; lin
         <li><span>Extra loan principal<br /><span className="muted small">Repayments minus interest, paid down off the home loan</span></span>
           <span>{money(o.pm.principal)}/mo<br /><span className="muted small">{money(o.summary.totals.loanPrincipal)} in total</span></span></li>
         {o.capital.map(c => (
-          <li key={c.what}><span>{c.what}<br /><span className="muted small">{c.payments > 1 ? `${c.payments} payments, ${range({ from: c.from, to: c.to })}` : day(c.from)}</span></span><span>{money(c.amount)}</span></li>
+          <li key={c.what}><span><EventChip type="big" bare /> {c.what}<br /><span className="muted small">{c.payments > 1 ? `${c.payments} payments, ${range({ from: c.from, to: c.to })}` : day(c.from)}</span></span><span>{money(c.amount)}</span></li>
         ))}
       </ul>
       <BusinessLoan period={b} lines={lines} householdId={householdId} dataStart={dataStart} />
@@ -205,7 +207,7 @@ function BusinessLoan({ period, lines, householdId, dataStart }: {
     <div className="stack">
       <ul className="list">
         <li>
-          <span>Loan to TCM (LandCruiser)<br />
+          <span><EventChip type="loan" bare /> {householdRules.businessLoanLabel}<br />
             <span className="muted small">
               {balance
                 ? <>Owed {money(balance.owedBefore)} before {day(balance.asOf)} · lent {money(balance.lent)} · repaid {money(balance.repaid)} since</>

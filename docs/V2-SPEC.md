@@ -21,11 +21,21 @@ colour used everywhere: timeline chips, chart layers, list dots, badges.
 
 | Type | Examples | Light | Dark |
 |---|---|---|---|
-| Trip | Melbourne visits, holidays | #A86A12 | #E0A84A |
-| Big purchase | Solar, car, furniture, school fees in a lump | #7A4E9C | #B89BE0 |
-| Loan | Loan to TCM, repayments back, extra home-loan payments | #1C6E8C | #6BB8D6 |
-| Income event | Tax refund, bonus, a big TCM payment | #1F7A6B | #4FB3A0 |
-| Bill spike | Annual rego, yearly insurance, a big quarterly bill | #6B5B4E | #C4B5A5 |
+| Trip | Melbourne visits, holidays | #A86A12 | #BF8726 |
+| Big purchase | Solar, car, furniture, school fees in a lump | #824097 | #A06AF1 |
+| Loan | Loan to TCM, repayments back, extra home-loan payments | #2997EA | #056EB8 |
+| Income event | Tax refund, bonus, a big TCM payment | #0E8570 | #27A88C |
+| Bill spike | Annual rego, yearly insurance, a big quarterly bill | #DC57AA | #BA3782 |
+
+Colours as built (Phase 9). The first draft's set failed the colour check: loan and income were
+too close even for full colour vision, loan and big purchase collapsed for red-green colour
+blindness, and the bill brown read as grey. These pass the dataviz validator against the surface
+in both themes: 3:1 contrast, and colour-blind and normal-vision separation for every pair of event
+types and for the chart stack (regular spending, trips, big purchases, bill spikes). Trip and
+income reuse the v1 chart colours. One pair can't clear the normal-vision floor in dark mode: loan
+against regular-spending blue (never shown side by side; loans aren't spending). Chips are ink
+text on a tint with the colour in the outline and icon, so text contrast never depends on the
+event colour.
 
 Rules:
 - **Happened** = solid fill. **Planned** = same colour, dashed outline and light diagonal hatch.
@@ -40,6 +50,9 @@ Rules:
   can't duplicate them): `capital` lines → Big purchase; `business_loan` and
   `business_loan_repaid` → Loan; loan-account payments that aren't part of the weekly repayment
   series (an extra $1,000) → Loan; income lines ≥ $2,000 that aren't regular pay → Income event.
+  As built: "not regular pay" means a tax refund, or more than 1.5× the median payment from the
+  same income source (pay changed employer and amount during the year, so a detected series
+  missed ordinary pay days). Business-loan lines within 7 days of each other are one event.
   Only trips, labelled big purchases and planned items are stored.
 - **Suggested big purchases**: any single spending line ≥ $1,000 (configurable) that isn't
   recurring and isn't in a trip gets a "Label this?" prompt: name it, pick a type, or dismiss.

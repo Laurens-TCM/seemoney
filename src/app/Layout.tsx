@@ -7,7 +7,7 @@ import { LoadState, OfflineBanner } from './LoadState';
 
 const TABS = [
   { to: '/', label: 'Overview' },
-  { to: '/trips', label: 'Trips' },
+  { to: '/events', label: 'Events' },
   { to: '/regulars', label: 'Regulars' },
   { to: '/plan', label: 'Plan' },
   { to: '/data', label: 'Data' },

@@ -1,5 +1,4 @@
--- v2 Phase 9 (DRAFT: rename to .sql when Phase 9 starts). Trips become events with a type.
--- Reviewed against the live schema. Safe to re-run.
+-- v2 Phase 9: trips become events with a type. Reviewed against the live schema. Safe to re-run.
 do $$ begin
   if to_regclass('public.events') is null and to_regclass('public.trips') is not null
      and (select relkind from pg_class where oid = 'public.trips'::regclass) = 'r' then

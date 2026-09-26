@@ -15,7 +15,7 @@ describe.skipIf(!liveReady)('row-level security', () => {
     for (const role of ['member', 'other', 'outsider'] as const) users[role] = await live.user(role);
     homeA = await live.household('RLS test A', [users.member.id]);
     homeB = await live.household('RLS test B', [users.other.id]);
-    const t = await live.admin.from('trips').insert({ household_id: homeB, name: 'B trip', start_date: '2026-01-01', end_date: '2026-01-05' }).select('id').single();
+    const t = await live.admin.from('events').insert({ household_id: homeB, name: 'B trip', start_date: '2026-01-01', end_date: '2026-01-05', kind: 'family', place: 'melbourne' }).select('id').single();
     if (t.error) throw t.error;
     tripB = t.data.id;
   }, 60_000);
@@ -30,13 +30,13 @@ describe.skipIf(!liveReady)('row-level security', () => {
 
   it('lets a member read and write their household rows', async () => {
     const c = users.member.client;
-    const trip = await c.from('trips').insert({ household_id: homeA, name: 'Melbourne', start_date: '2026-03-01', end_date: '2026-03-05' }).select('id').single();
+    const trip = await c.from('events').insert({ household_id: homeA, name: 'Melbourne', start_date: '2026-03-01', end_date: '2026-03-05', kind: 'family', place: 'melbourne' }).select('id').single();
     expect(trip.error).toBeNull();
     const line = await c.from('lines').insert({ household_id: homeA, tx_id: `t-${live.run}`, date: '2026-03-02', name: 'Cafe', amount: -12.5, kind: 'spend' });
     expect(line.error).toBeNull();
     const goal = await c.from('goals').insert({ household_id: homeA, name: 'Trips', amount: 5000 });
     expect(goal.error).toBeNull();
-    const override = await c.from('trip_overrides').insert({ trip_id: trip.data!.id, household_id: homeA, tx_id: `t-${live.run}`, included: true });
+    const override = await c.from('event_overrides').insert({ event_id: trip.data!.id, household_id: homeA, tx_id: `t-${live.run}`, included: true });
     expect(override.error).toBeNull();
     const read = await c.from('lines').select('tx_id, amount');
     expect(read.data).toEqual([{ tx_id: `t-${live.run}`, amount: -12.5 }]);
@@ -44,17 +44,17 @@ describe.skipIf(!liveReady)('row-level security', () => {
 
   it('stops a member writing into another household', async () => {
     const c = users.member.client;
-    const trip = await c.from('trips').insert({ household_id: homeB, name: 'Sneaky', start_date: '2026-03-01', end_date: '2026-03-02' });
+    const trip = await c.from('events').insert({ household_id: homeB, name: 'Sneaky', start_date: '2026-03-01', end_date: '2026-03-02', kind: 'family', place: 'melbourne' });
     expect(trip.error?.code).toBe('42501'); // row violates row-level security
-    const trips = await live.admin.from('trips').select('id').eq('household_id', homeB);
+    const trips = await live.admin.from('events').select('id').eq('household_id', homeB);
     expect(trips.data).toHaveLength(1);
   });
 
-  it('stops a trip override pointing at a trip in another household', async () => {
+  it('stops an event override pointing at an event in another household', async () => {
     const c = users.member.client;
-    const own = await c.from('trip_overrides').insert({ trip_id: tripB, household_id: homeA, tx_id: 'x', included: true });
-    expect(own.error?.code).toBe('23503'); // foreign key: trip isn't in household A
-    const theirs = await c.from('trip_overrides').insert({ trip_id: tripB, household_id: homeB, tx_id: 'x', included: true });
+    const own = await c.from('event_overrides').insert({ event_id: tripB, household_id: homeA, tx_id: 'x', included: true });
+    expect(own.error?.code).toBe('23503'); // foreign key: the event isn't in household A
+    const theirs = await c.from('event_overrides').insert({ event_id: tripB, household_id: homeB, tx_id: 'x', included: true });
     expect(theirs.error?.code).toBe('42501');
   });
 
@@ -73,10 +73,16 @@ describe.skipIf(!liveReady)('row-level security', () => {
 
   it('shows an outsider nothing and lets them write nothing', async () => {
     const c = users.outsider.client;
-    for (const table of ['households', 'household_members', 'trips', 'lines', 'goals', 'trip_overrides', 'imports', 'settings'] as const) {
+    for (const table of ['households', 'household_members', 'events', 'lines', 'goals', 'event_overrides', 'imports', 'settings', 'regulars', 'dismissed_events'] as const) {
       const { data, error } = await c.from(table).select('*');
       expect(error, table).toBeNull();
       expect(data, table).toEqual([]);
+    }
+    // The v1 compatibility views obey row-level security too (security_invoker).
+    for (const view of ['trips', 'trip_overrides'] as const) {
+      const { data, error } = await c.from(view).select('*');
+      expect(error, view).toBeNull();
+      expect(data, view).toEqual([]);
     }
     const write = await c.from('goals').insert({ household_id: homeA, name: 'Hijack', amount: 1 });
     expect(write.error?.code).toBe('42501');
@@ -84,7 +90,7 @@ describe.skipIf(!liveReady)('row-level security', () => {
 
   it('shows a visitor who is not signed in nothing', async () => {
     const anon = anonClient();
-    for (const table of ['households', 'lines', 'trips'] as const) {
+    for (const table of ['households', 'lines', 'events'] as const) {
       const { data } = await anon.from(table).select('*');
       expect(data ?? [], table).toEqual([]);
     }

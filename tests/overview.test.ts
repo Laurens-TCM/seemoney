@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { businessBalance, buildOverview } from '../src/lib/overview';
 import { applyOverrides } from '../src/lib/classify';
 import { DAYS_PER_MONTH } from '../src/lib/summary';
-import { allocateTrips, suggestTrips, tripDatesFor } from '../src/lib/trips';
+import { allocateEvents, type StoredEvent } from '../src/lib/events';
+import { suggestTrips, tripDatesFor } from '../src/lib/trips';
 import { classifyFile, dollars } from './helpers';
 
 const sumPm = (xs: { perMonth: number }[]) => xs.reduce((a, x) => a + x.perMonth, 0);
@@ -28,7 +29,7 @@ describe('what the business still owes', () => {
 describe('overview on the sample', () => {
   const { lines } = classifyFile('fixtures/sample-frollo.csv');
   const imports = [{ from: '2026-01-02', to: '2026-03-28' }];
-  const o = buildOverview({ lines, imports, windowMonths: 3, hideTrips: false })!;
+  const o = buildOverview({ lines, imports, windowMonths: 3, hideEvents: false })!;
 
   it('averages over the days the data covers inside the window', () => {
     expect(o.window).toEqual({ from: '2025-12-28', to: '2026-03-28' });
@@ -48,7 +49,7 @@ describe('overview on the sample', () => {
   });
 
   it('names a gap between two imports', () => {
-    const gapped = buildOverview({ lines, imports: [{ from: '2026-01-02', to: '2026-01-31' }, { from: '2026-03-02', to: '2026-03-28' }], windowMonths: 3, hideTrips: false })!;
+    const gapped = buildOverview({ lines, imports: [{ from: '2026-01-02', to: '2026-01-31' }, { from: '2026-03-02', to: '2026-03-28' }], windowMonths: 3, hideEvents: false })!;
     expect(gapped.missing).toEqual([{ from: '2026-02-01', to: '2026-03-01' }]);
     expect(gapped.covered).toBe(30 + 27);
   });
@@ -67,7 +68,7 @@ it(realFile ? 'Overview real-data test ran' : 'Overview real-data test skipped: 
 describe.skipIf(!realFile)('overview on the real export (12 months)', () => {
   const { lines } = realFile ? classifyFile(realFile) : { lines: [] };
   const imports = expected ? [{ from: expected.from, to: expected.to }] : [];
-  const o = realFile ? buildOverview({ lines, imports, windowMonths: 12, hideTrips: true })! : (null as never);
+  const o = realFile ? buildOverview({ lines, imports, windowMonths: 12, hideEvents: true })! : (null as never);
 
   it('covers exactly the verified 365 days', () => {
     expect(o.window).toEqual({ from: expected.from, to: expected.to });
@@ -92,17 +93,20 @@ describe.skipIf(!realFile)('overview on the real export (12 months)', () => {
     expect(o.pm.principal).toBeCloseTo((expected.totals.loanPrincipal * 100) / months, 6);
   });
 
-  it('leaves the verified trip spending out of regular spending when asked', () => {
-    const trips = suggestTrips(lines, [], []).map((s, i) => ({ id: `t${i}`, ...tripDatesFor(s), place: 'melbourne' as const }));
-    const alloc = allocateTrips(lines, trips, []);
-    const withTrips = buildOverview({ lines, imports, windowMonths: 12, hideTrips: true, trips: alloc })!;
+  it('leaves the verified trip spending out of regular spending when asked, stored as events', () => {
+    const trips: StoredEvent[] = suggestTrips(lines, [], []).map((s, i) => ({
+      id: `t${i}`, type: 'trip', name: `Trip ${i}`, ...tripDatesFor(s), kind: 'family', place: 'melbourne', rechargeToBusiness: false,
+    }));
+    const alloc = allocateEvents(lines, trips, []);
+    const withTrips = buildOverview({ lines, imports, windowMonths: 12, hideEvents: true, events: alloc })!;
     const months = expected.days / DAYS_PER_MONTH;
-    expect(withTrips.hideTrips).toBe(true);
-    expect(withTrips.pm.trips).toBeCloseTo((expected.trips.total * 100) / months, 6);
+    expect(withTrips.hideEvents).toBe(true);
+    expect(withTrips.pm.events).toBeCloseTo((expected.trips.total * 100) / months, 6);
     expect(withTrips.pm.regular).toBeCloseTo(((expected.totals.spend - expected.trips.total) * 100) / months, 4);
     const listed = sumPm(withTrips.groups);
     expect(Math.abs(listed - withTrips.pm.regular)).toBeLessThan(100); // only sub-50c groups are unlisted
-    expect(withTrips.bars.reduce((a, b) => a + b.trips, 0)).toBe(Math.round(expected.trips.total * 100));
+    expect(withTrips.bars.reduce((a, b) => a + b.events, 0)).toBe(Math.round(expected.trips.total * 100));
+    expect(withTrips.bars.reduce((a, b) => a + (b.byType.trip ?? 0), 0)).toBe(Math.round(expected.trips.total * 100));
   });
 
   it('shows the solar install as one item paid in two parts', () => {

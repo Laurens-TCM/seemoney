@@ -5,7 +5,7 @@ import { Data } from './pages/Data';
 import { Overview } from './pages/Overview';
 import { Plan } from './pages/Plan';
 import { Regulars } from './pages/Regulars';
-import { Trips } from './pages/Trips';
+import { Events } from './pages/Events';
 import { SignIn } from './SignIn';
 
 export function App() {
@@ -17,7 +17,8 @@ export function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Overview />} />
-          <Route path="trips" element={<Trips />} />
+          <Route path="events" element={<Events />} />
+          <Route path="trips" element={<Navigate to="/events" replace />} />
           <Route path="regulars" element={<Regulars />} />
           <Route path="plan" element={<Plan />} />
           <Route path="data" element={<Data />} />

@@ -8,3 +8,4 @@ data/
 !fixtures/*.csv
 .DS_Store
 supabase/.temp/
+*.tsbuildinfo

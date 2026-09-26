@@ -1,6 +1,7 @@
-// Month by month: stacked bars (regular spending, trips) with an income marker. Hand-drawn SVG.
-// Colours are the validated chart tokens (--chart-*); text stays in ink tokens.
+// Month by month: stacked bars (regular spending, then a layer per event type) with an income
+// marker. Hand-drawn SVG. Colours are the validated tokens (--chart-*, --ev-*); text stays in ink.
 import { useState } from 'react';
+import { EVENT_TYPES, type EventType } from '../lib/events';
 import type { MonthBar } from '../lib/overview';
 import { money } from './format';
 
@@ -21,9 +22,15 @@ function niceMax(v: number) {
   return Math.ceil(v / step) * step;
 }
 
-export function MonthChart({ bars, showTrips }: { bars: MonthBar[]; showTrips: boolean }) {
+export function MonthChart({ bars, showEvents }: { bars: MonthBar[]; showEvents: boolean }) {
+  // Event types with spending in these months, in the fixed order (never re-coloured by rank).
+  const types: EventType[] = showEvents ? EVENT_TYPES.map(t => t.key).filter(k => bars.some(b => (b.byType[k] ?? 0) > 0)) : [];
+  const plural = (k: EventType) => EVENT_TYPES.find(t => t.key === k)!.plural;
+  const spent = (b: MonthBar) => (showEvents ? b.regular : b.regular + b.events);
+  const layers = (b: MonthBar) => types.map(k => [k, b.byType[k] ?? 0] as const).filter(([, v]) => v > 0);
+  const detail = (b: MonthBar) => layers(b).map(([k, v]) => `${plural(k).toLowerCase()} ${money(v)}`).join(', ');
   const [selected, setSelected] = useState<string | null>(null);
-  const max = niceMax(Math.max(...bars.map(b => Math.max(b.regular + b.trips, b.income)), 1));
+  const max = niceMax(Math.max(...bars.map(b => Math.max(b.regular + b.events, b.income)), 1));
   const y = (v: number) => TOP + HEIGHT - (Math.max(v, 0) / max) * HEIGHT;
   const width = LEFT + bars.length * STEP;
   const ticks = [0, max / 2, max];
@@ -32,8 +39,8 @@ export function MonthChart({ bars, showTrips }: { bars: MonthBar[]; showTrips: b
   return (
     <div className="stack">
       <ul className="legend small" aria-label="Legend">
-        <li><span className="swatch" style={{ background: 'var(--chart-spend)' }} />{showTrips ? 'Regular spending' : 'Spending'}</li>
-        {showTrips && <li><span className="swatch" style={{ background: 'var(--chart-trips)' }} />Trips</li>}
+        <li><span className="swatch" style={{ background: 'var(--chart-spend)' }} />{showEvents ? 'Regular spending' : 'Spending'}</li>
+        {types.map(k => <li key={k}><span className={`swatch ev-${k}`} style={{ background: 'var(--ev)' }} />{plural(k)}</li>)}
         <li><span className="swatch line" style={{ background: 'var(--chart-income)' }} />Income</li>
       </ul>
       <div className="chart-scroll">
@@ -47,23 +54,28 @@ export function MonthChart({ bars, showTrips }: { bars: MonthBar[]; showTrips: b
           ))}
           {bars.map((b, i) => {
             const x = LEFT + i * STEP + (STEP - BAR) / 2;
-            const regularTop = y(b.regular), tripsTop = y(b.regular + b.trips);
-            const hasTrips = showTrips && b.trips > 0;
-            const label = `${monthName(b.month, 'long')}: ${showTrips ? 'regular spending' : 'spending'} ${money(showTrips ? b.regular : b.regular + b.trips)}`
-              + `${hasTrips ? `, trips ${money(b.trips)}` : ''}, income ${money(b.income)}${b.partial ? ' (part month)' : ''}`;
+            const ls = layers(b);
+            const regularTop = y(b.regular), totalTop = y(b.regular + b.events);
+            const label = `${monthName(b.month, 'long')}: ${showEvents ? 'regular spending' : 'spending'} ${money(spent(b))}`
+              + `${ls.length ? `, ${detail(b)}` : ''}, income ${money(b.income)}${b.partial ? ' (part month)' : ''}`;
+            let base = b.regular;
             return (
               <g key={b.month} className={`month${b.partial ? ' partial' : ''}${selected === b.month ? ' selected' : ''}`}
                 role="button" tabIndex={0} aria-label={label} aria-pressed={selected === b.month}
                 onClick={() => setSelected(selected === b.month ? null : b.month)}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(selected === b.month ? null : b.month); } }}>
                 <rect x={LEFT + i * STEP} y={TOP} width={STEP} height={HEIGHT + LABEL} className="hit" />
-                {showTrips ? (
+                {showEvents ? (
                   <>
-                    <path d={segment(x, regularTop, BAR, TOP + HEIGHT - regularTop, !hasTrips)} fill="var(--chart-spend)" />
-                    {hasTrips && <path d={segment(x, tripsTop, BAR, regularTop - tripsTop - GAP, true)} fill="var(--chart-trips)" />}
+                    <path d={segment(x, regularTop, BAR, TOP + HEIGHT - regularTop, !ls.length)} fill="var(--chart-spend)" />
+                    {ls.map(([k, v], j) => {
+                      const bottom = y(base), top = y(base + v);
+                      base += v;
+                      return <path key={k} className={`ev-${k}`} d={segment(x, top, BAR, bottom - top - GAP, j === ls.length - 1)} fill="var(--ev)" />;
+                    })}
                   </>
                 ) : (
-                  <path d={segment(x, tripsTop, BAR, TOP + HEIGHT - tripsTop, true)} fill="var(--chart-spend)" />
+                  <path d={segment(x, totalTop, BAR, TOP + HEIGHT - totalTop, true)} fill="var(--chart-spend)" />
                 )}
                 {b.income > 0 && (
                   <>
@@ -80,20 +92,20 @@ export function MonthChart({ bars, showTrips }: { bars: MonthBar[]; showTrips: b
       {sel ? (
         <div className="notice small" role="status">
           <strong>{monthName(sel.month, 'long')}{sel.partial ? ' (part month)' : ''}</strong><br />
-          {showTrips ? 'Regular spending' : 'Spending'} {money(showTrips ? sel.regular : sel.regular + sel.trips)}
-          {showTrips && sel.trips > 0 && <> · trips {money(sel.trips)}</>} · income {money(sel.income)}
+          {showEvents ? 'Regular spending' : 'Spending'} {money(spent(sel))}
+          {layers(sel).map(([k, v]) => <span key={k}> · {plural(k).toLowerCase()} {money(v)}</span>)} · income {money(sel.income)}
         </div>
       ) : <p className="muted small" style={{ margin: 0 }}>Tap a month for its figures. Faded months are only partly covered.</p>}
       <details className="small">
         <summary>Show as a table</summary>
         <table className="table">
-          <thead><tr><th scope="col">Month</th><th scope="col">{showTrips ? 'Regular' : 'Spending'}</th>{showTrips && <th scope="col">Trips</th>}<th scope="col">Income</th></tr></thead>
+          <thead><tr><th scope="col">Month</th><th scope="col">{showEvents ? 'Regular' : 'Spending'}</th>{types.map(k => <th key={k} scope="col">{plural(k)}</th>)}<th scope="col">Income</th></tr></thead>
           <tbody>
             {bars.map(b => (
               <tr key={b.month}>
                 <th scope="row">{monthName(b.month, 'long')}{b.partial ? '*' : ''}</th>
-                <td>{money(showTrips ? b.regular : b.regular + b.trips)}</td>
-                {showTrips && <td>{money(b.trips)}</td>}
+                <td>{money(spent(b))}</td>
+                {types.map(k => <td key={k}>{money(b.byType[k] ?? 0)}</td>)}
                 <td>{money(b.income)}</td>
               </tr>
             ))}

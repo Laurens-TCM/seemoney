@@ -96,7 +96,7 @@ per phase, merged to `main` when CI is green.
 - **Accept:** fixture matches; real data finds the same series as `data/expected-real.json`.
 
 ## Phase 9 — Events and colour
-- Apply `0006_events.sql` (from the reviewed draft): trips → events with types; automatic events on import;
+- Apply `0006_events.sql` (from the reviewed draft; applied, RLS through the compatibility views tested): trips → events with types; automatic events on import;
   "Label this?" for big one-off lines; colour tokens and the planned (hatched) style.
 - Overview toggle renamed "Leave events out of regular spending".
 - **Accept:** existing trips unchanged in totals; the solar install and TCM loan appear as

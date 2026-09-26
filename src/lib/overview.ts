@@ -5,12 +5,14 @@ import {
   coveredDays, daysIn, DAYS_PER_MONTH, missingRanges, perMonth, summarise, windowFor,
   type DateRange, type Summary, type WindowMonths,
 } from './summary';
-import type { Allocation } from './trips';
+import type { EventType } from './events';
 
 export interface MonthBar {
   month: string; // YYYY-MM
-  regular: number; // spending not on a trip (all spending when trips aren't left out)
-  trips: number;
+  regular: number; // spending not in an event (all spending when events aren't left out)
+  events: number;
+  /** Event spending by type (trips, labelled big purchases…). */
+  byType: Partial<Record<EventType, number>>;
   income: number;
   /** The window or the data covers only part of this month. */
   partial: boolean;
@@ -20,7 +22,7 @@ export interface GroupRow {
   group: string;
   perMonth: number;
   categories: { category: string; perMonth: number }[];
-  /** Biggest payees over the whole window (trips included), by total. */
+  /** Biggest payees over the whole window (events included), by total. */
   payees: { name: string; total: number; count: number }[];
 }
 
@@ -29,9 +31,9 @@ export interface Overview {
   covered: number; // days
   months: number; // covered days ÷ 30.4375
   missing: DateRange[];
-  hideTrips: boolean;
+  hideEvents: boolean;
   summary: Summary;
-  pm: { income: number; otherIn: number; spend: number; regular: number; trips: number; principal: number };
+  pm: { income: number; otherIn: number; spend: number; regular: number; events: number; principal: number };
   bars: MonthBar[];
   groups: GroupRow[];
   /** Capital items, one row per label (a solar install paid in two parts is one row). */
@@ -43,14 +45,15 @@ export interface OverviewInput {
   lines: Line[];
   imports: DateRange[];
   windowMonths: WindowMonths;
-  hideTrips: boolean;
-  trips?: Allocation | null;
+  hideEvents: boolean;
+  /** Spend line → the event it belongs to (trips and labelled events). */
+  events?: { owner: Map<string, { type: EventType }> } | null;
 }
 
 const PAYEES_SHOWN = 10;
 const HALF_DOLLAR = 50;
 
-export function buildOverview({ lines, imports, windowMonths, hideTrips, trips }: OverviewInput): Overview | null {
+export function buildOverview({ lines, imports, windowMonths, hideEvents, events }: OverviewInput): Overview | null {
   const counted = lines.filter(l => l.kind !== 'excluded');
   const newest = counted.reduce((d, l) => (l.date > d ? l.date : d), '');
   if (!newest) return null;
@@ -63,27 +66,32 @@ export function buildOverview({ lines, imports, windowMonths, hideTrips, trips }
   const inWindow = counted.filter(l => l.date >= win.from && l.date <= win.to);
   const pm = (cents: number) => perMonth(cents, covered);
 
-  // Trip spending inside the window, by month / group / category.
-  const tripLines = trips ? inWindow.filter(l => l.kind === 'spend' && trips.owner.has(l.txId)) : [];
+  // Event spending inside the window, by month / group / type.
+  const owner = events?.owner;
+  const eventLines = owner ? inWindow.filter(l => l.kind === 'spend' && owner.has(l.txId)) : [];
   const sumBy = (key: (l: Line) => string) => {
     const out: Record<string, number> = {};
-    for (const l of tripLines) out[key(l)] = (out[key(l)] ?? 0) - l.amount;
+    for (const l of eventLines) out[key(l)] = (out[key(l)] ?? 0) - l.amount;
     return out;
   };
-  const tripByMonth = sumBy(l => l.date.slice(0, 7));
-  const tripByGroup = sumBy(l => l.group!);
-  const tripTotal = Object.values(tripByMonth).reduce((a, b) => a + b, 0);
-  const hide = hideTrips && tripTotal !== 0;
+  const eventByMonth = sumBy(l => l.date.slice(0, 7));
+  const eventByGroup = sumBy(l => l.group!);
+  const eventByMonthType = sumBy(l => `${l.date.slice(0, 7)}|${owner!.get(l.txId)!.type}`);
+  const eventTotal = Object.values(eventByMonth).reduce((a, b) => a + b, 0);
+  const hide = hideEvents && eventTotal !== 0;
 
   const t = summary.totals;
   const bars: MonthBar[] = summary.months.map(m => {
-    const tripsThisMonth = tripByMonth[m.month] ?? 0;
+    const eventsThisMonth = eventByMonth[m.month] ?? 0;
+    const byType: MonthBar['byType'] = {};
+    for (const [k, v] of Object.entries(eventByMonthType)) if (k.startsWith(m.month)) byType[k.slice(8) as EventType] = v;
     const monthRange = { from: `${m.month}-01`, to: lastDay(m.month) };
     const inside = { from: maxDate(monthRange.from, win.from), to: minDate(monthRange.to, win.to) };
     return {
       month: m.month,
-      regular: m.spend - tripsThisMonth,
-      trips: tripsThisMonth,
+      regular: m.spend - eventsThisMonth,
+      events: eventsThisMonth,
+      byType,
       income: m.income,
       partial: coveredDays(inside, imports) < daysIn(monthRange),
     };
@@ -93,9 +101,9 @@ export function buildOverview({ lines, imports, windowMonths, hideTrips, trips }
   for (const m of summary.months) {
     for (const [g, v] of Object.entries(m.byGroup)) groupTotals[g] = (groupTotals[g] ?? 0) + v;
   }
-  if (hide) for (const [g, v] of Object.entries(tripByGroup)) groupTotals[g] -= v;
+  if (hide) for (const [g, v] of Object.entries(eventByGroup)) groupTotals[g] -= v;
   for (const l of inWindow) {
-    if (l.kind !== 'spend' || (hide && trips!.owner.has(l.txId))) continue;
+    if (l.kind !== 'spend' || (hide && owner!.has(l.txId))) continue;
     const cats = (categoryTotals[l.group!] ??= {});
     cats[l.category!] = (cats[l.category!] ?? 0) - l.amount;
   }
@@ -128,10 +136,10 @@ export function buildOverview({ lines, imports, windowMonths, hideTrips, trips }
     .sort((a, b) => b.perMonth - a.perMonth);
 
   return {
-    window: win, covered, months: covered / DAYS_PER_MONTH, missing, hideTrips: hide, summary,
+    window: win, covered, months: covered / DAYS_PER_MONTH, missing, hideEvents: hide, summary,
     pm: {
       income: pm(t.income), otherIn: pm(t.otherIn), spend: pm(t.spend),
-      regular: pm(t.spend - (hide ? tripTotal : 0)), trips: pm(tripTotal), principal: pm(t.loanPrincipal),
+      regular: pm(t.spend - (hide ? eventTotal : 0)), events: pm(eventTotal), principal: pm(t.loanPrincipal),
     },
     bars,
     groups,

@@ -14,6 +14,29 @@ export type Database = {
   }
   public: {
     Tables: {
+      dismissed_events: {
+        Row: {
+          household_id: string
+          tx_id: string
+        }
+        Insert: {
+          household_id: string
+          tx_id: string
+        }
+        Update: {
+          household_id?: string
+          tx_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dismissed_events_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dismissed_suggestions: {
         Row: {
           from_date: string
@@ -36,6 +59,92 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dismissed_suggestions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_overrides: {
+        Row: {
+          event_id: string
+          household_id: string
+          included: boolean
+          tx_id: string
+        }
+        Insert: {
+          event_id: string
+          household_id: string
+          included: boolean
+          tx_id: string
+        }
+        Update: {
+          event_id?: string
+          household_id?: string
+          included?: boolean
+          tx_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_overrides_trip_id_household_id_fkey"
+            columns: ["event_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "trip_overrides_trip_id_household_id_fkey"
+            columns: ["event_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_date: string
+          household_id: string
+          id: string
+          kind: string | null
+          name: string
+          place: string | null
+          recharge_to_business: boolean | null
+          start_date: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date: string
+          household_id: string
+          id?: string
+          kind?: string | null
+          name: string
+          place?: string | null
+          recharge_to_business?: boolean | null
+          start_date: string
+          type?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string
+          household_id?: string
+          id?: string
+          kind?: string | null
+          name?: string
+          place?: string | null
+          recharge_to_business?: boolean | null
+          start_date?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_household_id_fkey"
             columns: ["household_id"]
             isOneToOne: false
             referencedRelation: "households"
@@ -340,6 +449,7 @@ export type Database = {
       }
       settings: {
         Row: {
+          big_purchase_threshold: number | null
           business_owed_as_of: string | null
           business_owed_before: number | null
           household_id: string
@@ -347,6 +457,7 @@ export type Database = {
           offset_balance: number | null
         }
         Insert: {
+          big_purchase_threshold?: number | null
           business_owed_as_of?: string | null
           business_owed_before?: number | null
           household_id: string
@@ -354,6 +465,7 @@ export type Database = {
           offset_balance?: number | null
         }
         Update: {
+          big_purchase_threshold?: number | null
           business_owed_as_of?: string | null
           business_owed_before?: number | null
           household_id?: string
@@ -399,82 +511,6 @@ export type Database = {
           },
         ]
       }
-      trip_overrides: {
-        Row: {
-          household_id: string
-          included: boolean
-          trip_id: string
-          tx_id: string
-        }
-        Insert: {
-          household_id: string
-          included: boolean
-          trip_id: string
-          tx_id: string
-        }
-        Update: {
-          household_id?: string
-          included?: boolean
-          trip_id?: string
-          tx_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trip_overrides_trip_id_household_id_fkey"
-            columns: ["trip_id", "household_id"]
-            isOneToOne: false
-            referencedRelation: "trips"
-            referencedColumns: ["id", "household_id"]
-          },
-        ]
-      }
-      trips: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          end_date: string
-          household_id: string
-          id: string
-          kind: string
-          name: string
-          place: string
-          recharge_to_business: boolean | null
-          start_date: string
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          end_date: string
-          household_id: string
-          id?: string
-          kind?: string
-          name: string
-          place?: string
-          recharge_to_business?: boolean | null
-          start_date: string
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          end_date?: string
-          household_id?: string
-          id?: string
-          kind?: string
-          name?: string
-          place?: string
-          recharge_to_business?: boolean | null
-          start_date?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trips_household_id_fkey"
-            columns: ["household_id"]
-            isOneToOne: false
-            referencedRelation: "households"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_settings: {
         Row: {
           hide_trips: boolean | null
@@ -506,7 +542,89 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      trip_overrides: {
+        Row: {
+          household_id: string | null
+          included: boolean | null
+          trip_id: string | null
+          tx_id: string | null
+        }
+        Insert: {
+          household_id?: string | null
+          included?: boolean | null
+          trip_id?: string | null
+          tx_id?: string | null
+        }
+        Update: {
+          household_id?: string | null
+          included?: boolean | null
+          trip_id?: string | null
+          tx_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_overrides_trip_id_household_id_fkey"
+            columns: ["trip_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "trip_overrides_trip_id_household_id_fkey"
+            columns: ["trip_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_date: string | null
+          household_id: string | null
+          id: string | null
+          kind: string | null
+          name: string | null
+          place: string | null
+          recharge_to_business: boolean | null
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string | null
+          household_id?: string | null
+          id?: string | null
+          kind?: string | null
+          name?: string | null
+          place?: string | null
+          recharge_to_business?: boolean | null
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string | null
+          household_id?: string | null
+          id?: string | null
+          kind?: string | null
+          name?: string | null
+          place?: string | null
+          recharge_to_business?: boolean | null
+          start_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       is_member: { Args: { h: string }; Returns: boolean }

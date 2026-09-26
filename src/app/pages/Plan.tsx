@@ -10,8 +10,8 @@ import {
   type Goal, type Targets,
 } from '../../lib/store';
 import { supabase } from '../../lib/supabase';
-import { allocateTrips } from '../../lib/trips';
-import { useGoals, useHousehold, useImports, useLines, useOffset, useOverrides, useTargets, useTrips, useUserSettings } from '../data';
+import { allocateEvents } from '../../lib/events';
+import { useGoals, useHousehold, useImports, useLines, useOffset, useOverrides, useTargets, useEvents, useUserSettings } from '../data';
 import { day, money, today } from '../format';
 import { useLoadState } from '../LoadState';
 
@@ -22,19 +22,19 @@ const monthLong = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateStri
 export function Plan() {
   const { household } = useHousehold();
   const hid = household!.id;
-  const lines = useLines(hid), overrides = useOverrides(hid), trips = useTrips(hid), imports = useImports(hid);
+  const lines = useLines(hid), overrides = useOverrides(hid), events = useEvents(hid), imports = useImports(hid);
   const goals = useGoals(hid), targets = useTargets(hid), offset = useOffset(hid);
   const { settings } = useUserSettings(hid);
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const hasTrips = (trips.data?.trips.length ?? 0) > 0;
-  const hideTrips = settings.hideTrips ?? hasTrips;
+  const hasEvents = (events.data?.events.length ?? 0) > 0;
+  const hideEvents = settings.hideEvents ?? hasEvents;
 
   const current = useMemo(() => (lines.data && overrides.data ? applyOverrides(lines.data, overrides.data) : null), [lines.data, overrides.data]);
-  const alloc = useMemo(() => (current && trips.data?.trips.length ? allocateTrips(current, trips.data.trips, trips.data.overrides) : null), [current, trips.data]);
+  const alloc = useMemo(() => (current && events.data?.events.length ? allocateEvents(current, events.data.events, events.data.overrides) : null), [current, events.data]);
   const o = useMemo(() => (current && imports.data
-    ? buildOverview({ lines: current, imports: imports.data.map(i => i.range), windowMonths: settings.windowMonths, hideTrips, trips: alloc })
-    : null), [current, imports.data, settings.windowMonths, hideTrips, alloc]);
+    ? buildOverview({ lines: current, imports: imports.data.map(i => i.range), windowMonths: settings.windowMonths, hideEvents, events: alloc })
+    : null), [current, imports.data, settings.windowMonths, hideEvents, alloc]);
 
   async function run(action: () => Promise<unknown>, ...keys: string[]) {
     setError(null);
@@ -42,7 +42,7 @@ export function Plan() {
     catch (e) { setError(`Couldn't save that (${(e as Error).message}). Try again.`); }
   }
 
-  const wait = useLoadState([lines, overrides, trips, imports, goals, targets, offset], 'your plan');
+  const wait = useLoadState([lines, overrides, events, imports, goals, targets, offset], 'your plan');
   if (wait) return <><h1>Plan</h1>{wait}</>;
   if (!o) return <><h1>Plan</h1><div className="panel"><p><Link to="/data">Import a Frollo export</Link> first, so the plan has averages to work from.</p></div></>;
 
@@ -57,7 +57,7 @@ export function Plan() {
   return (
     <>
       <h1>Plan</h1>
-      <p className="muted small">Averages from the last {settings.windowMonths} months{o.hideTrips ? ', with trips left out' : ''}. Change the period on the <Link to="/">Overview</Link>.</p>
+      <p className="muted small">Averages from the last {settings.windowMonths} months{o.hideEvents ? ', with events left out' : ''}. Change the period on the <Link to="/">Overview</Link>.</p>
       {error && <p className="error" role="alert">{error}</p>}
       <Goals goals={g} now={now} run={run} householdId={hid} />
       <OffsetPanel offset={offset.data!} goals={g} run={run} householdId={hid} />
@@ -72,16 +72,16 @@ export function Plan() {
         </dl>
         <p className="verdict">
           {figures.cut > 0
-            ? <>To fund these goals, {o.hideTrips ? 'regular ' : ''}spending needs to come down by <strong className="warn">{money(figures.cut)} a month</strong>, from {money(o.pm.regular)} to {money(figures.budget)}.</>
-            : <>Your average {o.hideTrips ? 'regular ' : ''}spending fits, with <strong className="in">{money(-figures.cut)} a month</strong> to spare.</>}
+            ? <>To fund these goals, {o.hideEvents ? 'regular ' : ''}spending needs to come down by <strong className="warn">{money(figures.cut)} a month</strong>, from {money(o.pm.regular)} to {money(figures.budget)}.</>
+            : <>Your average {o.hideEvents ? 'regular ' : ''}spending fits, with <strong className="in">{money(-figures.cut)} a month</strong> to spare.</>}
         </p>
-        {o.hideTrips && !tripGoal && (
-          <p className="muted small" style={{ margin: 0 }}>Trips ({money(o.pm.trips)} a month) aren't in these averages. <Link to="/trips">Add a trips goal</Link> so they're covered.</p>
+        {o.hideEvents && !tripGoal && (
+          <p className="muted small" style={{ margin: 0 }}>Events ({money(o.pm.events)} a month) aren't in these averages. <Link to="/events">Add a trips goal</Link> so they're covered.</p>
         )}
       </section>
 
       <TargetsPanel o={o} averages={averages} targets={t} trim={trim} budget={figures.budget} total={figures.targetsTotal} over={figures.over} run={run} householdId={hid} />
-      <ThisMonth lines={current!} alloc={o.hideTrips ? alloc : null} averages={averages} targets={t} now={now} />
+      <ThisMonth lines={current!} alloc={o.hideEvents ? alloc : null} averages={averages} targets={t} now={now} />
     </>
   );
 }
@@ -271,7 +271,7 @@ function TargetsPanel({ o, averages, targets, trim, budget, total, over, run, ho
 }
 
 function ThisMonth({ lines, alloc, averages, targets, now }: {
-  lines: Line[]; alloc: ReturnType<typeof allocateTrips> | null; averages: Record<string, number>; targets: Targets; now: string;
+  lines: Line[]; alloc: { owner: Map<string, unknown> } | null; averages: Record<string, number>; targets: Targets; now: string;
 }) {
   const month = now.slice(0, 7);
   const spend = lines.filter(l => l.kind === 'spend' && l.date.startsWith(month) && !(alloc?.owner.has(l.txId)));
@@ -291,7 +291,7 @@ function ThisMonth({ lines, alloc, averages, targets, now }: {
       <p className="muted small" style={{ margin: 0 }}>
         {monthLong(month)}, day {dayOfMonth} of {daysInMonth}.{' '}
         {newest < `${month}-01` ? <>No transactions for this month yet. <Link to="/data">Import a newer export</Link>.</>
-          : <>Transactions up to {day(newest)}{alloc ? ', trips left out' : ''}.</>}
+          : <>Transactions up to {day(newest)}{alloc ? ', events left out' : ''}.</>}
       </p>
       {newest >= `${month}-01` && (
         <ul className="groups">

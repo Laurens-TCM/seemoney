@@ -1,18 +1,19 @@
-// Live updates: when either of you changes a trip, tick, answer, regular, goal or setting, the other
+// Live updates: when either of you changes an event, tick, answer, regular, goal or setting, the other
 // phone refetches it. Row-level security applies to these events too.
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import type { Db } from './store';
 
 /** Tables that sync live, and the data each one affects (query-key prefixes). */
 export const LIVE_TABLES: Record<string, string[]> = {
-  trips: ['trips'],
-  trip_overrides: ['trips'],
+  events: ['events'],
+  event_overrides: ['events'],
+  dismissed_events: ['dismissed-events'],
   line_overrides: ['overrides'],
   dismissed_suggestions: ['dismissed'],
   goals: ['goals'],
   regulars: ['regulars'],
   targets: ['targets'],
-  settings: ['business-owed', 'settings'],
+  settings: ['business-owed', 'settings', 'big-purchase'],
   imports: ['imports', 'lines'],
 };
 
